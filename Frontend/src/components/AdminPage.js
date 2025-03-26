@@ -1,9 +1,8 @@
 import { useState, useEffect } from "react";
- // Adjust path if needed
- import Header from "./header";
+import Header from "./header";
 
 export default function AdminPage({ setPage }) {
-  const [companyCodes, setCompanyCodes] = useState([]);
+  const [companies, setCompanies] = useState([]);
   const [assemblyCodes, setAssemblyCodes] = useState([]);
   const [companyName, setCompanyName] = useState("");
   const [companyCode, setCompanyCode] = useState("");
@@ -11,17 +10,17 @@ export default function AdminPage({ setPage }) {
   const [assemblyCode, setAssemblyCode] = useState("");
 
   useEffect(() => {
-    fetchCompanyCodes();
+    fetchCompanies();
     fetchAssemblyCodes();
   }, []);
 
-  const fetchCompanyCodes = async () => {
+  const fetchCompanies = async () => {
     try {
       const response = await fetch("http://localhost:5000/api/company-codes");
       const data = await response.json();
-      setCompanyCodes(data.codes || []);
+      setCompanies(data.codes || []);
     } catch (err) {
-      console.error("Error fetching company codes:", err);
+      console.error("Error fetching companies:", err);
     }
   };
 
@@ -44,7 +43,7 @@ export default function AdminPage({ setPage }) {
     });
 
     if (response.ok) {
-      fetchCompanyCodes();
+      fetchCompanies();
       setCompanyName("");
       setCompanyCode("");
     } else {
@@ -71,29 +70,38 @@ export default function AdminPage({ setPage }) {
 
   const deleteCompany = async (code) => {
     if (!window.confirm("Are you sure?")) return;
-    await fetch("http://localhost:5000/api/delete-company", {
+    const response = await fetch("http://localhost:5000/api/delete-company", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ code }),
     });
-    fetchCompanyCodes();
+
+    if (response.ok) {
+      fetchCompanies();
+    } else {
+      alert("Failed to delete company");
+    }
   };
 
   const deleteAssembly = async (code) => {
     if (!window.confirm("Are you sure?")) return;
-    await fetch("http://localhost:5000/api/delete-assembly", {
+    const response = await fetch("http://localhost:5000/api/delete-assembly", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ code }),
     });
-    fetchAssemblyCodes();
+
+    if (response.ok) {
+      fetchAssemblyCodes();
+    } else {
+      alert("Failed to delete assembly");
+    }
   };
 
   return (
     <div className="AdminPage" style={styles.gradientWrapper}>
       <Header />
       <header style={styles.header}>
-        
         <h1 style={styles.heading}>Admin Panel</h1>
         <button onClick={() => setPage("dashboard")} style={styles.backButton}>
           ← Back to Dashboard
@@ -124,14 +132,14 @@ export default function AdminPage({ setPage }) {
             </button>
           </div>
           <ul style={styles.list}>
-            {companyCodes.length === 0 ? (
+            {companies.length === 0 ? (
               <p style={styles.noItems}>No Companies Added</p>
             ) : (
-              companyCodes.map((c) => (
-                <li key={c} style={styles.listItem}>
-                  <span style={styles.itemText}>{c}</span>
+              companies.map((c) => (
+                <li key={c.code} style={styles.listItem}>
+                  <span style={styles.itemText}>{c.name} ({c.code})</span>
                   <button
-                    onClick={() => deleteCompany(c)}
+                    onClick={() => deleteCompany(c.code)}
                     style={styles.deleteButton}
                   >
                     Delete
