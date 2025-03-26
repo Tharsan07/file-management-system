@@ -7,12 +7,20 @@
     {
       "code": "zo",
       "name": "zoho"
+    },
+    {
+      "code": "df",
+      "name": "sds"
     }
   ],
   "assemblies": [
     {
       "code": "fc",
       "name": "fabric"
+    },
+    {
+      "code": "fer",
+      "name": "dd"
     }
   ]
 }
