@@ -1,0 +1,18 @@
+{
+  "companies": [
+    {
+      "code": "WE",
+      "name": "52"
+    },
+    {
+      "code": "zo",
+      "name": "zoho"
+    }
+  ],
+  "assemblies": [
+    {
+      "code": "fc",
+      "name": "fabric"
+    }
+  ]
+}
