@@ -137,7 +137,9 @@ export default function AdminPage({ setPage }) {
             ) : (
               companies.map((c) => (
                 <li key={c.code} style={styles.listItem}>
-                  <span style={styles.itemText}>{c.name} ({c.code})</span>
+                  <span style={styles.itemText}>
+                    {c.name} ({c.code})
+                  </span>
                   <button
                     onClick={() => deleteCompany(c.code)}
                     style={styles.deleteButton}
@@ -177,10 +179,12 @@ export default function AdminPage({ setPage }) {
               <p style={styles.noItems}>No Assemblies Added</p>
             ) : (
               assemblyCodes.map((a) => (
-                <li key={a} style={styles.listItem}>
-                  <span style={styles.itemText}>{a}</span>
+                <li key={a.code} style={styles.listItem}>
+                  <span style={styles.itemText}>
+                    {a.name} ({a.code})
+                  </span>
                   <button
-                    onClick={() => deleteAssembly(a)}
+                    onClick={() => deleteAssembly(a.code)}
                     style={styles.deleteButton}
                   >
                     Delete

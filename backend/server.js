@@ -229,9 +229,8 @@ app.get("/api/get-metadata", async (req, res) => {
 app.get("/api/company-codes", async (req, res) => {
   const connection = await pool.getConnection();
   try {
-    const [companies] = await connection.execute("SELECT code FROM companies");
-    const companyCodes = companies.map((company) => company.code);
-    res.json({ total: companyCodes.length, codes: companyCodes });
+    const [companies] = await connection.execute("SELECT code, name FROM companies");
+    res.json({ total: companies.length, codes: companies });
   } catch (error) {
     console.error("Error fetching company codes:", error);
     res.status(500).json({ message: "Error fetching company codes.", error: error.toString() });
@@ -240,12 +239,12 @@ app.get("/api/company-codes", async (req, res) => {
   }
 });
 
+
 app.get("/api/assembly-codes", async (req, res) => {
   const connection = await pool.getConnection();
   try {
-    const [assemblies] = await connection.execute("SELECT code FROM assemblies");
-    const assemblyCodes = assemblies.map((assembly) => assembly.code);
-    res.json({ total: assemblyCodes.length, codes: assemblyCodes });
+    const [assemblies] = await connection.execute("SELECT code, name FROM assemblies");
+    res.json({ total: assemblies.length, codes: assemblies });
   } catch (error) {
     console.error("Error fetching assembly codes:", error);
     res.status(500).json({ message: "Error fetching assembly codes.", error: error.toString() });
@@ -253,6 +252,7 @@ app.get("/api/assembly-codes", async (req, res) => {
     connection.release();
   }
 });
+
 
 // Add these endpoints to your existing server code
 
