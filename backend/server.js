@@ -3,6 +3,7 @@ const fs = require("fs");
 const path = require("path");
 const multer = require("multer");
 const cors = require("cors");
+const mysql = require("mysql2/promise");
 const authRoutes = require("./routes/auth");
 require("dotenv").config();
 
@@ -23,21 +24,16 @@ if (!fs.existsSync(STORAGE_PATH)) {
   fs.mkdirSync(STORAGE_PATH, { recursive: true });
 }
 
-// Store company codes and assembly codes
-const companyData = {
-  companies: [], // Example: { code: "ABC123", name: "Company A" }
-  assemblies: [] // Example: { code: "XYZ789", name: "Assembly X" }
-};
-
-// Read/write company data from a JSON file (for persistence)
-const DATA_FILE = "data.json";
-if (fs.existsSync(DATA_FILE)) {
-  Object.assign(companyData, JSON.parse(fs.readFileSync(DATA_FILE, "utf8")));
-}
-
-const saveCompanyData = () => {
-  fs.writeFileSync(DATA_FILE, JSON.stringify(companyData, null, 2));
-};
+// Create a MySQL connection pool
+const pool = mysql.createPool({
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME,
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0
+});
 
 // List all files and folders in a specific directory
 app.get("/api/list", (req, res) => {
@@ -157,50 +153,148 @@ app.post("/api/upload", upload.single("file"), (req, res) => {
 });
 
 // Admin API - Add Company
-app.post("/api/add-company", (req, res) => {
+app.post("/api/add-company", async (req, res) => {
   const { code, name } = req.body;
   if (!code || !name)
     return res.status(400).json({ message: "Code and name are required!" });
 
-  if (companyData.companies.some((c) => c.code === code)) {
-    return res.status(400).json({ message: "Company code already exists!" });
-  }
+  const connection = await pool.getConnection();
+  try {
+    const [results] = await connection.execute(
+      "SELECT * FROM companies WHERE code = ?",
+      [code]
+    );
+    if (results.length > 0) {
+      return res.status(400).json({ message: "Company code already exists!" });
+    }
 
-  companyData.companies.push({ code, name });
-  saveCompanyData();
-  res.json({ message: "Company added successfully!", companyData });
+    await connection.execute(
+      "INSERT INTO companies (code, name) VALUES (?, ?)",
+      [code, name]
+    );
+    res.json({ message: "Company added successfully!" });
+  } catch (error) {
+    console.error("Error adding company:", error);
+    res.status(500).json({ message: "Error adding company.", error: error.toString() });
+  } finally {
+    connection.release();
+  }
 });
 
 // Admin API - Add Assembly
-app.post("/api/add-assembly", (req, res) => {
+app.post("/api/add-assembly", async (req, res) => {
   const { code, name } = req.body;
   if (!code || !name)
     return res.status(400).json({ message: "Code and name are required!" });
 
-  if (companyData.assemblies.some((a) => a.code === code)) {
-    return res.status(400).json({ message: "Assembly code already exists!" });
-  }
+  const connection = await pool.getConnection();
+  try {
+    const [results] = await connection.execute(
+      "SELECT * FROM assemblies WHERE code = ?",
+      [code]
+    );
+    if (results.length > 0) {
+      return res.status(400).json({ message: "Assembly code already exists!" });
+    }
 
-  companyData.assemblies.push({ code, name });
-  saveCompanyData();
-  res.json({ message: "Assembly added successfully!", companyData });
+    await connection.execute(
+      "INSERT INTO assemblies (code, name) VALUES (?, ?)",
+      [code, name]
+    );
+    res.json({ message: "Assembly added successfully!" });
+  } catch (error) {
+    console.error("Error adding assembly:", error);
+    res.status(500).json({ message: "Error adding assembly.", error: error.toString() });
+  } finally {
+    connection.release();
+  }
 });
 
 // Get all company and assembly codes
-app.get("/api/get-metadata", (req, res) => {
-  res.json(companyData);
+app.get("/api/get-metadata", async (req, res) => {
+  const connection = await pool.getConnection();
+  try {
+    const [companies] = await connection.execute("SELECT * FROM companies");
+    const [assemblies] = await connection.execute("SELECT * FROM assemblies");
+    res.json({ companies, assemblies });
+  } catch (error) {
+    console.error("Error fetching metadata:", error);
+    res.status(500).json({ message: "Error fetching metadata.", error: error.toString() });
+  } finally {
+    connection.release();
+  }
 });
 
 // API to get all company codes and their count
-app.get("/api/company-codes", (req, res) => {
-  const companyCodes = companyData.companies.map((company) => company.code);
-  res.json({ total: companyCodes.length, codes: companyCodes });
+app.get("/api/company-codes", async (req, res) => {
+  const connection = await pool.getConnection();
+  try {
+    const [companies] = await connection.execute("SELECT code, name FROM companies");
+    res.json({ total: companies.length, codes: companies });
+  } catch (error) {
+    console.error("Error fetching company codes:", error);
+    res.status(500).json({ message: "Error fetching company codes.", error: error.toString() });
+  } finally {
+    connection.release();
+  }
 });
 
-app.get("/api/assembly-codes", (req, res) => {
-  const assemblyCodes = companyData.assemblies.map((assembly) => assembly.code);
-  res.json({ total: assemblyCodes.length, codes: assemblyCodes });
+
+app.get("/api/assembly-codes", async (req, res) => {
+  const connection = await pool.getConnection();
+  try {
+    const [assemblies] = await connection.execute("SELECT code, name FROM assemblies");
+    res.json({ total: assemblies.length, codes: assemblies });
+  } catch (error) {
+    console.error("Error fetching assembly codes:", error);
+    res.status(500).json({ message: "Error fetching assembly codes.", error: error.toString() });
+  } finally {
+    connection.release();
+  }
 });
+
+// Delete a company by code
+app.post("/api/delete-company", async (req, res) => {
+  const { code } = req.body;
+  const connection = await pool.getConnection();
+  try {
+    const [result] = await connection.execute(
+      "DELETE FROM companies WHERE code = ?",
+      [code]
+    );
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: "Company not found!" });
+    }
+    res.json({ message: "Company deleted successfully!" });
+  } catch (error) {
+    console.error("Error deleting company:", error);
+    res.status(500).json({ message: "Error deleting company.", error: error.toString() });
+  } finally {
+    connection.release();
+  }
+});
+
+// Delete an assembly by code
+app.post("/api/delete-assembly", async (req, res) => {
+  const { code } = req.body;
+  const connection = await pool.getConnection();
+  try {
+    const [result] = await connection.execute(
+      "DELETE FROM assemblies WHERE code = ?",
+      [code]
+    );
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: "Assembly not found!" });
+    }
+    res.json({ message: "Assembly deleted successfully!" });
+  } catch (error) {
+    console.error("Error deleting assembly:", error);
+    res.status(500).json({ message: "Error deleting assembly.", error: error.toString() });
+  } finally {
+    connection.release();
+  }
+});
+
 
 app.listen(PORT, () =>
   console.log(`✅ Server running on port ${PORT}`)
