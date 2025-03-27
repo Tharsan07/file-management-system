@@ -1,19 +1,20 @@
 import { useState, useEffect } from "react";
 import AdminPage from "./AdminPage";
-import logo from "../assets/logo.png"; // Corrected relative path
-import certs from "../assets/iso-certify-trans.png"; // Corrected relative path
+import logo from "../assets/logo.png";
+import certs from "../assets/iso-certify-trans.png";
+import FolderCreationModal from "./ModelComponent";
 
 export default function Dashboard({ authToken, setPage }) {
   const [files, setFiles] = useState([]);
-  const [currentPath, setCurrentPath] = useState(""); // Track navigation inside folders
+  const [currentPath, setCurrentPath] = useState("");
   const [error, setError] = useState("");
-  const [searchQuery, setSearchQuery] = useState(""); // Search state
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     fetchFiles();
-  }, [currentPath]); // Reload when path changes
+  }, [currentPath]);
 
-  // Fetch files and folders from backend
   const fetchFiles = async () => {
     try {
       const response = await fetch(
@@ -30,25 +31,21 @@ export default function Dashboard({ authToken, setPage }) {
     }
   };
 
-  // Create new folder inside the current directory
-  const addFolder = async () => {
-    const folderName = prompt("Enter folder name:");
-    if (folderName) {
-      const response = await fetch("http://localhost:5000/api/create-folder", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ folderName, path: currentPath }),
-      });
+  const addFolder = async (companyCode, year, assemblyCode) => {
+    const folderName = `${companyCode}-${year}-${assemblyCode}`;
+    const response = await fetch("http://localhost:5000/api/create-folder", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ folderName, path: currentPath }),
+    });
 
-      if (response.ok) {
-        fetchFiles();
-      } else {
-        alert("Folder creation failed.");
-      }
+    if (response.ok) {
+      fetchFiles();
+    } else {
+      alert("Folder creation failed.");
     }
   };
 
-  // Delete a file or folder
   const deleteItem = async (name) => {
     if (window.confirm("Are you sure you want to delete this item?")) {
       const response = await fetch("http://localhost:5000/api/delete", {
@@ -65,7 +62,6 @@ export default function Dashboard({ authToken, setPage }) {
     }
   };
 
-  // Rename a file or folder
   const renameItem = async (oldName) => {
     const newName = prompt("Enter new name:");
     if (newName) {
@@ -83,14 +79,13 @@ export default function Dashboard({ authToken, setPage }) {
     }
   };
 
-  // Upload file to the current folder
   const uploadFile = async (event) => {
     const file = event.target.files[0];
     if (!file) return;
 
     const formData = new FormData();
     formData.append("file", file);
-    formData.append("path", currentPath); // Use currentPath instead of testPath
+    formData.append("path", currentPath);
 
     const response = await fetch("http://localhost:5000/api/upload", {
       method: "POST",
@@ -105,12 +100,10 @@ export default function Dashboard({ authToken, setPage }) {
     }
   };
 
-  // Navigate inside a folder
   const navigateToFolder = (folderName) => {
     setCurrentPath(currentPath ? `${currentPath}/${folderName}` : folderName);
   };
 
-  // Go back to the previous folder
   const goBack = () => {
     if (!currentPath) return;
     const pathArray = currentPath.split("/");
@@ -118,12 +111,10 @@ export default function Dashboard({ authToken, setPage }) {
     setCurrentPath(pathArray.join("/"));
   };
 
-  // Navigate to admin page
   const goToAdminPage = () => {
     setPage("admin");
   };
 
-  // Filter files and folders based on search query
   const filteredFiles = files.filter((item) =>
     item.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -286,7 +277,7 @@ export default function Dashboard({ authToken, setPage }) {
         }
 
         .file-card span {
-          color: black; /* Set folder name color to black */
+          color: black;
         }
 
         .file-card .actions {
@@ -324,6 +315,32 @@ export default function Dashboard({ authToken, setPage }) {
           opacity: 0;
           cursor: pointer;
         }
+
+        .modal-overlay {
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background: rgba(0, 0, 0, 0.5);
+          display: flex;
+          justify-content: center;
+          align-items: center;
+        }
+
+        .modal-content {
+          background: white;
+          padding: 2rem;
+          border-radius: 8px;
+          width: 100%;
+          max-width: 400px;
+        }
+
+        .modal-actions {
+          display: flex;
+          justify-content: flex-end;
+          gap: 1rem;
+        }
       `}</style>
 
       {/* Header with Logo and Certifications */}
@@ -357,7 +374,7 @@ export default function Dashboard({ authToken, setPage }) {
 
           {/* Buttons */}
           <div className="mb-4 flex justify-center gap-4">
-            <button onClick={addFolder} className="btn btn-purple">
+            <button onClick={() => setIsModalOpen(true)} className="btn btn-purple">
               Add Folder
             </button>
             <button className="btn btn-blue mt-6" onClick={goToAdminPage}>
@@ -413,6 +430,13 @@ export default function Dashboard({ authToken, setPage }) {
           </div>
         </div>
       </div>
+
+      {/* Folder Creation Modal */}
+      <FolderCreationModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onCreate={addFolder}
+      />
     </>
   );
 }
