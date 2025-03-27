@@ -253,9 +253,6 @@ app.get("/api/assembly-codes", async (req, res) => {
   }
 });
 
-
-// Add these endpoints to your existing server code
-
 // Delete a company by code
 app.post("/api/delete-company", async (req, res) => {
   const { code } = req.body;
