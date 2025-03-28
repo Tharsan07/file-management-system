@@ -99,50 +99,65 @@ export default function AdminPage({ setPage }) {
   };
 
   return (
-    <div className="AdminPage" style={styles.gradientWrapper}>
+    <div className="min-h-screen p-5 bg-gradient-to-br from-gray-100 to-blue-100">
       <Header />
-      <header style={styles.header}>
-        <h1 style={styles.heading}>Admin Panel</h1>
-        <button onClick={() => setPage("dashboard")} style={styles.backButton}>
+      <header className="text-center mb-8">
+        <h1 className="text-4xl font-bold text-gray-800 mb-2">Admin Panel</h1>
+        <button
+          onClick={() => setPage("dashboard")}
+          className="bg-blue-500 text-white border border-blue-500 px-4 py-2 rounded-md hover:shadow-md transition duration-200"
+        >
           ← Back to Dashboard
         </button>
       </header>
 
-      <div style={styles.containerWrapper}>
+      <div className="flex flex-wrap gap-5 justify-center">
         {/* Company Management */}
-        <div style={styles.card}>
-          <h3 style={styles.subheading}>Manage Companies</h3>
-          <div style={styles.inputGroup}>
+        <div className="flex-1 min-w-[400px] bg-white p-5 rounded-lg border border-gray-200 shadow-md">
+          <h3 className="text-2xl font-semibold text-gray-700 border-b pb-2 mb-4">
+            Manage Companies
+          </h3>
+          <div className="flex flex-wrap gap-2 mb-4">
             <input
               type="text"
               placeholder="Company Name"
               value={companyName}
               onChange={(e) => setCompanyName(e.target.value)}
-              style={styles.input}
+              className={`flex-1 min-w-[180px] p-2.5 border rounded-md focus:border-blue-500 outline-none transition ${
+                companyName ? "text-black" : ""
+              }`}
             />
             <input
               type="text"
               placeholder="Company Code"
               value={companyCode}
               onChange={(e) => setCompanyCode(e.target.value)}
-              style={styles.input}
+              className={`flex-1 min-w-[180px] p-2.5 border rounded-md focus:border-blue-500 outline-none transition ${
+                companyCode ? "text-black" : ""
+              }`}
             />
-            <button onClick={addCompany} style={styles.addButton}>
+            <button
+              onClick={addCompany}
+              className="px-4 py-2 bg-green-500 text-white rounded-md hover:shadow-md transition duration-200"
+            >
               Add
             </button>
           </div>
-          <ul style={styles.list}>
+          <ul className="space-y-2">
             {companies.length === 0 ? (
-              <p style={styles.noItems}>No Companies Added</p>
+              <p className="text-gray-500">No Companies Added</p>
             ) : (
               companies.map((c) => (
-                <li key={c.code} style={styles.listItem}>
-                  <span style={styles.itemText}>
+                <li
+                  key={c.code}
+                  className="flex justify-between items-center p-2.5 border rounded-md bg-gray-50 hover:shadow-md transition duration-200"
+                >
+                  <span className="text-gray-800">
                     {c.name} ({c.code})
                   </span>
                   <button
                     onClick={() => deleteCompany(c.code)}
-                    style={styles.deleteButton}
+                    className="px-3 py-1 bg-red-500 text-white rounded-md hover:shadow-md transition duration-200"
                   >
                     Delete
                   </button>
@@ -153,39 +168,51 @@ export default function AdminPage({ setPage }) {
         </div>
 
         {/* Assembly Management */}
-        <div style={styles.card}>
-          <h3 style={styles.subheading}>Manage Assemblies</h3>
-          <div style={styles.inputGroup}>
+        <div className="flex-1 min-w-[400px] bg-white p-5 rounded-lg border border-gray-200 shadow-md">
+          <h3 className="text-2xl font-semibold text-gray-700 border-b pb-2 mb-4">
+            Manage Assemblies
+          </h3>
+          <div className="flex flex-wrap gap-2 mb-4">
             <input
               type="text"
               placeholder="Assembly Name"
               value={assemblyName}
               onChange={(e) => setAssemblyName(e.target.value)}
-              style={styles.input}
+              className={`flex-1 min-w-[180px] p-2.5 border rounded-md focus:border-blue-500 outline-none transition ${
+                assemblyName ? "text-black" : ""
+              }`}
             />
             <input
               type="text"
               placeholder="Assembly Code"
               value={assemblyCode}
               onChange={(e) => setAssemblyCode(e.target.value)}
-              style={styles.input}
+              className={`flex-1 min-w-[180px] p-2.5 border rounded-md focus:border-blue-500 outline-none transition ${
+                assemblyCode ? "text-black" : ""
+              }`}
             />
-            <button onClick={addAssembly} style={styles.addButton}>
+            <button
+              onClick={addAssembly}
+              className="px-4 py-2 bg-green-500 text-white rounded-md hover:shadow-md transition duration-200"
+            >
               Add
             </button>
           </div>
-          <ul style={styles.list}>
+          <ul className="space-y-2">
             {assemblyCodes.length === 0 ? (
-              <p style={styles.noItems}>No Assemblies Added</p>
+              <p className="text-gray-500">No Assemblies Added</p>
             ) : (
               assemblyCodes.map((a) => (
-                <li key={a.code} style={styles.listItem}>
-                  <span style={styles.itemText}>
+                <li
+                  key={a.code}
+                  className="flex justify-between items-center p-2.5 border rounded-md bg-gray-50 hover:shadow-md transition duration-200"
+                >
+                  <span className="text-gray-800">
                     {a.name} ({a.code})
                   </span>
                   <button
                     onClick={() => deleteAssembly(a.code)}
-                    style={styles.deleteButton}
+                    className="px-3 py-1 bg-red-500 text-white rounded-md hover:shadow-md transition duration-200"
                   >
                     Delete
                   </button>
@@ -197,136 +224,4 @@ export default function AdminPage({ setPage }) {
       </div>
     </div>
   );
-}
-
-// 🎨 Styles
-const styles = {
-  gradientWrapper: {
-    minHeight: "100vh",
-    padding: "20px",
-    background: "linear-gradient(135deg, #f0f4f8, #e0e7ff)",
-  },
-  header: {
-    textAlign: "center",
-    marginBottom: "30px",
-  },
-  heading: {
-    fontSize: "36px",
-    fontWeight: "bold",
-    color: "#333",
-    marginBottom: "10px",
-  },
-  backButton: {
-    backgroundColor: "#007bff",
-    color: "#fff",
-    border: "1px solid #007bff",
-    padding: "8px 16px",
-    fontSize: "14px",
-    borderRadius: "6px",
-    cursor: "pointer",
-    transition: "all 0.2s ease",
-  },
-  containerWrapper: {
-    display: "flex",
-    flexWrap: "wrap",
-    gap: "20px",
-    justifyContent: "center",
-  },
-  card: {
-    flex: "1 1 400px",
-    backgroundColor: "#fff",
-    padding: "20px",
-    borderRadius: "10px",
-    border: "1px solid #e0e0e0",
-    boxShadow: "0 4px 8px rgba(0,0,0,0.05)",
-  },
-  subheading: {
-    fontSize: "22px",
-    fontWeight: "600",
-    color: "#444",
-    marginBottom: "16px",
-    borderBottom: "1px solid #ddd",
-    paddingBottom: "8px",
-  },
-  inputGroup: {
-    display: "flex",
-    flexWrap: "wrap",
-    gap: "10px",
-    marginBottom: "16px",
-  },
-  input: {
-    padding: "10px",
-    fontSize: "14px",
-    borderRadius: "6px",
-    border: "1px solid #ccc",
-    minWidth: "180px",
-    flex: "1",
-  },
-  addButton: {
-    padding: "10px 20px",
-    backgroundColor: "#28a745",
-    color: "#fff",
-    border: "none",
-    borderRadius: "6px",
-    cursor: "pointer",
-    fontSize: "14px",
-    transition: "all 0.2s ease",
-  },
-  list: {
-    listStyle: "none",
-    padding: "0",
-    marginTop: "10px",
-  },
-  listItem: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    padding: "10px",
-    border: "1px solid #eee",
-    borderRadius: "6px",
-    marginBottom: "8px",
-    backgroundColor: "#fafafa",
-    transition: "transform 0.2s ease, box-shadow 0.2s ease",
-  },
-  itemText: {
-    fontSize: "16px",
-    fontWeight: "500",
-    color: "#333",
-  },
-  deleteButton: {
-    padding: "6px 12px",
-    backgroundColor: "#dc3545",
-    color: "#fff",
-    border: "none",
-    borderRadius: "4px",
-    cursor: "pointer",
-    fontSize: "12px",
-    transition: "all 0.2s ease",
-  },
-  noItems: {
-    color: "#666",
-    fontSize: "16px",
-  },
-};
-
-// Hover Effects
-const hoverStyles = `
-  .AdminPage button:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-  }
-  .AdminPage .listItem:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-  }
-  .AdminPage input:focus {
-    border-color: #007bff;
-    outline: none;
-  }
-`;
-
-if (typeof document !== "undefined") {
-  const styleSheet = document.createElement("style");
-  styleSheet.textContent = hoverStyles;
-  document.head.appendChild(styleSheet);
 }

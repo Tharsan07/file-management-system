@@ -4,41 +4,11 @@ import certs from "../assets/iso-certify-trans.png"; // Adjust path as needed
 
 export default function Header() {
   return (
-    <>
-      <style>{`
-        .header-wrapper {
-          position: sticky;
-          top: 0;
-          z-index: 1000;
-          background: linear-gradient(to right, #e0eafc, #cfdef3);
-          border-bottom: 2px solid #2563eb;
-          box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-
-        .header-content {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          padding: 10px 20px;
-        }
-
-        .header-logo {
-          height: 80px;
-          object-fit: contain;
-        }
-
-        .header-certs {
-          height: 60px;
-          object-fit: contain;
-        }
-      `}</style>
-
-      <div className="header-wrapper">
-        <div className="header-content">
-          <img src={logo} alt="Company Logo" className="header-logo" />
-          <img src={certs} alt="Certifications" className="header-certs" />
-        </div>
+    <div className="sticky top-0 z-50 bg-gradient-to-r from-blue-100 to-blue-200 border-b-2 border-blue-600 shadow-md">
+      <div className="flex justify-between items-center px-5 py-3">
+        <img src={logo} alt="Company Logo" className="h-20 object-contain" />
+        <img src={certs} alt="Certifications" className="h-16 object-contain" />
       </div>
-    </>
+    </div>
   );
 }
