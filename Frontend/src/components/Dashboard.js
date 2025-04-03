@@ -13,12 +13,7 @@ export default function Dashboard({ authToken, setPage }) {
   useEffect(() => {
     fetchFiles();
   }, [currentPath]);
-  const navigateToPathSegment = (index) => {
-    const pathArray = currentPath.split("/");
-    const newPath = pathArray.slice(0, index + 1).join("/");
-    setCurrentPath(newPath);
-  };
-  
+
   const fetchFiles = async () => {
     try {
       const response = await fetch(
@@ -36,7 +31,7 @@ export default function Dashboard({ authToken, setPage }) {
   };
 
   const addFolder = async (year, companyCode, assemblyCode) => {
-    const folderName = `${companyCode}-${year}-${assemblyCode}`;
+    const folderName = `${year}-${companyCode}-${assemblyCode}`;
     const response = await fetch("http://localhost:5000/api/create-folder", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -117,6 +112,12 @@ export default function Dashboard({ authToken, setPage }) {
 
   const goToAdminPage = () => {
     setPage("admin");
+  };
+
+  const navigateToPathSegment = (index) => {
+    const pathArray = currentPath.split("/");
+    const newPath = pathArray.slice(0, index + 1).join("/");
+    setCurrentPath(newPath);
   };
 
   const filteredFiles = files.filter((item) =>
