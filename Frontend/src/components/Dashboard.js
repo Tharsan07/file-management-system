@@ -34,15 +34,24 @@ export default function Dashboard({ authToken, setPage }) {
 
   const addFolder = async (year, companyCode, assemblyCode) => {
     const folderName = `${year}-${companyCode}-${assemblyCode}`;
-    const response = await fetch("http://localhost:5000/api/create-folder", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ folderName, path: currentPath }),
-    });
-    if (response.ok) {
-      fetchFiles();
-    } else {
-      alert("Folder creation failed.");
+    try {
+      const response = await fetch("http://localhost:5000/api/create-folder", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ folderName, path: currentPath }),
+      });
+  
+      if (response.ok) {
+        const data = await response.json();
+        console.log("Folder created:", data.folderName); // Log the actual folder name
+        fetchFiles(); // Refresh the file list
+      } else {
+        const data = await response.json();
+        alert(`Folder creation failed: ${data.message}`);
+      }
+    } catch (error) {
+      console.error("Error during folder creation:", error);
+      alert("An unexpected error occurred while creating the folder.");
     }
   };
 

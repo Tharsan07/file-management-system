@@ -28,8 +28,7 @@ const FolderCreationModal = ({ isOpen, onClose, onCreate }) => {
       } catch (err) {
         console.error("Error fetching assembly codes:", err);
       }
-    };
-
+    };  
     fetchCompanies();
     fetchAssemblyCodes();
   }, []);

@@ -16,7 +16,6 @@ app.use(cors()); // Allow frontend requests
 app.use("/api/auth", authRoutes);
 
 // Global variable to hold the current folder path.
-// This should be updated as the user navigates or creates folders.
 let folder_path = "";
 
 // Ensure storage directory exists
@@ -32,7 +31,7 @@ const pool = mysql.createPool({
   database: process.env.DB_NAME,
   waitForConnections: true,
   connectionLimit: 10,
-  queueLimit: 0
+  queueLimit: 0,
 });
 
 // List all files and folders in a specific directory
@@ -60,30 +59,54 @@ app.get("/api/list", (req, res) => {
 // Create folder endpoint
 app.post("/api/create-folder", (req, res) => {
   const { folderName, path: currentPath } = req.body;
+
   if (!folderName) {
     return res.status(400).json({ message: "Folder name is required!" });
   }
 
-  // Construct full path based on the current path and the new folder name
-  const fullPath = path.join(STORAGE_PATH, currentPath || "", folderName);
+  // Construct the base path for the folder
+  const basePath = path.join(STORAGE_PATH, currentPath || "");
+
+  // Function to find the next available folder name with a sequence
+  const getNextAvailableFolderName = (baseName, basePath) => {
+    let counter = 1;
+    let newName = baseName;
+    while (fs.existsSync(path.join(basePath, newName))) {
+      newName = `${baseName}-${counter}`; // Include a hyphen here
+      counter++;
+    }
+    return newName;
+  };
+
+  // Get the next available folder name
+  const finalFolderName = getNextAvailableFolderName(folderName, basePath);
+
+  // Construct the full path for the new folder
+  const fullPath = path.join(basePath, finalFolderName);
+
   // Update the global folder_path to the currentPath (or empty if at root)
   folder_path = currentPath || "";
-  console.log("Creating folder in path:", currentPath);
 
   try {
-    if (!fs.existsSync(fullPath)) {
-      fs.mkdirSync(fullPath, { recursive: true });
-      // If the folder is created at the root level, create default "2D" and "3D" subfolders.
-      if (!currentPath) {
-        fs.mkdirSync(path.join(fullPath, "2D"));
-        fs.mkdirSync(path.join(fullPath, "3D"));
-      }
-      return res.json({ message: "Folder created successfully!", folderName });
+    // Create the folder
+    fs.mkdirSync(fullPath, { recursive: true });
+
+    // If the folder is created at the root level, create default "2D" and "3D" subfolders.
+    if (!currentPath) {
+      fs.mkdirSync(path.join(fullPath, "2D"));
+      fs.mkdirSync(path.join(fullPath, "3D"));
     }
-    res.status(400).json({ message: "Folder already exists!" });
+
+    return res.json({
+      message: "Folder created successfully!",
+      folderName: finalFolderName,
+    });
   } catch (error) {
     console.error("Error creating folder:", error);
-    res.status(500).json({ message: "Error creating folder.", error: error.toString() });
+    res.status(500).json({
+      message: "Error creating folder.",
+      error: error.toString(),
+    });
   }
 });
 
@@ -123,10 +146,8 @@ app.post("/api/delete", (req, res) => {
 });
 
 // Multer storage configuration for file uploads.
-// It uses the global folder_path variable as the destination.
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    console.log("In storage, using global folder_path:", folder_path);
     const uploadPath = path.join(STORAGE_PATH, folder_path || "");
     if (!fs.existsSync(uploadPath)) {
       fs.mkdirSync(uploadPath, { recursive: true });
@@ -137,41 +158,35 @@ const storage = multer.diskStorage({
     cb(null, file.originalname);
   },
 });
+
 const upload = multer({ storage });
 
 // Upload endpoint using single file upload
 app.post("/api/upload", upload.single("file"), (req, res) => {
-  console.log("Received form data on upload endpoint:", req.body);
   if (!req.file) {
     return res.status(400).json({ message: "No file uploaded." });
   }
   res.json({
     message: "File uploaded successfully!",
     fileName: req.file.originalname,
-    currentPath: folder_path || ""
+    currentPath: folder_path || "",
   });
 });
 
 // Admin API - Add Company
 app.post("/api/add-company", async (req, res) => {
   const { code, name } = req.body;
-  if (!code || !name)
+  if (!code || !name) {
     return res.status(400).json({ message: "Code and name are required!" });
+  }
 
   const connection = await pool.getConnection();
   try {
-    const [results] = await connection.execute(
-      "SELECT * FROM companies WHERE code = ?",
-      [code]
-    );
+    const [results] = await connection.execute("SELECT * FROM companies WHERE code = ?", [code]);
     if (results.length > 0) {
       return res.status(400).json({ message: "Company code already exists!" });
     }
-
-    await connection.execute(
-      "INSERT INTO companies (code, name) VALUES (?, ?)",
-      [code, name]
-    );
+    await connection.execute("INSERT INTO companies (code, name) VALUES (?, ?)", [code, name]);
     res.json({ message: "Company added successfully!" });
   } catch (error) {
     console.error("Error adding company:", error);
@@ -184,23 +199,17 @@ app.post("/api/add-company", async (req, res) => {
 // Admin API - Add Assembly
 app.post("/api/add-assembly", async (req, res) => {
   const { code, name } = req.body;
-  if (!code || !name)
+  if (!code || !name) {
     return res.status(400).json({ message: "Code and name are required!" });
+  }
 
   const connection = await pool.getConnection();
   try {
-    const [results] = await connection.execute(
-      "SELECT * FROM assemblies WHERE code = ?",
-      [code]
-    );
+    const [results] = await connection.execute("SELECT * FROM assemblies WHERE code = ?", [code]);
     if (results.length > 0) {
       return res.status(400).json({ message: "Assembly code already exists!" });
     }
-
-    await connection.execute(
-      "INSERT INTO assemblies (code, name) VALUES (?, ?)",
-      [code, name]
-    );
+    await connection.execute("INSERT INTO assemblies (code, name) VALUES (?, ?)", [code, name]);
     res.json({ message: "Assembly added successfully!" });
   } catch (error) {
     console.error("Error adding assembly:", error);
@@ -239,7 +248,7 @@ app.get("/api/company-codes", async (req, res) => {
   }
 });
 
-
+// API to get all assembly codes and their count
 app.get("/api/assembly-codes", async (req, res) => {
   const connection = await pool.getConnection();
   try {
@@ -258,10 +267,7 @@ app.post("/api/delete-company", async (req, res) => {
   const { code } = req.body;
   const connection = await pool.getConnection();
   try {
-    const [result] = await connection.execute(
-      "DELETE FROM companies WHERE code = ?",
-      [code]
-    );
+    const [result] = await connection.execute("DELETE FROM companies WHERE code = ?", [code]);
     if (result.affectedRows === 0) {
       return res.status(404).json({ message: "Company not found!" });
     }
@@ -279,10 +285,7 @@ app.post("/api/delete-assembly", async (req, res) => {
   const { code } = req.body;
   const connection = await pool.getConnection();
   try {
-    const [result] = await connection.execute(
-      "DELETE FROM assemblies WHERE code = ?",
-      [code]
-    );
+    const [result] = await connection.execute("DELETE FROM assemblies WHERE code = ?", [code]);
     if (result.affectedRows === 0) {
       return res.status(404).json({ message: "Assembly not found!" });
     }
@@ -295,7 +298,4 @@ app.post("/api/delete-assembly", async (req, res) => {
   }
 });
 
-
-app.listen(PORT, () =>
-  console.log(`✅ Server running on port ${PORT}`)
-);
+app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
