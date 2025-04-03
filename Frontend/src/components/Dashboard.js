@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
+import RenameModal from "./RenameModal"; // Import the RenameModal component
 import logo from "../assets/logo.png";
 import certs from "../assets/iso-certify-trans.png";
-import FolderCreationModal from "./ModelComponent";
+import ModelComponent from "./ModelComponent";
 
 export default function Dashboard({ authToken, setPage }) {
   const [files, setFiles] = useState([]);
@@ -9,6 +10,8 @@ export default function Dashboard({ authToken, setPage }) {
   const [error, setError] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isRenameModalOpen, setIsRenameModalOpen] = useState(false);
+  const [itemToRename, setItemToRename] = useState(null);
 
   useEffect(() => {
     fetchFiles();
@@ -61,20 +64,22 @@ export default function Dashboard({ authToken, setPage }) {
     }
   };
 
-  const renameItem = async (oldName) => {
-    const newName = prompt("Enter new name:");
-    if (newName) {
-      const response = await fetch("http://localhost:5000/api/rename", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ oldName, newName, path: currentPath }),
-      });
+  const renameItem = (oldName) => {
+    setItemToRename(oldName);
+    setIsRenameModalOpen(true);
+  };
 
-      if (response.ok) {
-        fetchFiles();
-      } else {
-        alert("Failed to rename.");
-      }
+  const handleRename = async (oldName, newName) => {
+    const response = await fetch("http://localhost:5000/api/rename", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ oldName, newName, path: currentPath }),
+    });
+
+    if (response.ok) {
+      fetchFiles();
+    } else {
+      alert("Failed to rename.");
     }
   };
 
@@ -264,10 +269,18 @@ export default function Dashboard({ authToken, setPage }) {
       </div>
 
       {/* Folder Creation Modal - Positioned at Root */}
-      <FolderCreationModal
+      <ModelComponent
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onCreate={addFolder}
+      />
+
+      {/* Rename Modal */}
+      <RenameModal
+        isOpen={isRenameModalOpen}
+        onClose={() => setIsRenameModalOpen(false)}
+        onRename={handleRename}
+        oldName={itemToRename}
       />
     </>
   );
