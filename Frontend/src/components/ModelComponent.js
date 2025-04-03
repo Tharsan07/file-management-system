@@ -12,6 +12,7 @@ const FolderCreationModal = ({ isOpen, onClose, onCreate }) => {
       try {
         const response = await fetch("http://localhost:5000/api/company-codes");
         const data = await response.json();
+        console.log("Fetched companies:", data); // Debugging line
         setCompanies(data.codes || []);
       } catch (err) {
         console.error("Error fetching companies:", err);
@@ -22,6 +23,7 @@ const FolderCreationModal = ({ isOpen, onClose, onCreate }) => {
       try {
         const response = await fetch("http://localhost:5000/api/assembly-codes");
         const data = await response.json();
+        console.log("Fetched assembly codes:", data); // Debugging line
         setAssemblyCodes(data.codes || []);
       } catch (err) {
         console.error("Error fetching assembly codes:", err);
@@ -33,6 +35,7 @@ const FolderCreationModal = ({ isOpen, onClose, onCreate }) => {
   }, []);
 
   const handleCreate = () => {
+    console.log("Creating folder with:", { year, companyCode, assemblyCode }); // Debugging line
     onCreate(year, companyCode, assemblyCode);
     setCompanyCode("");
     setYear("");
@@ -47,14 +50,13 @@ const FolderCreationModal = ({ isOpen, onClose, onCreate }) => {
   const years = Array.from({ length: 10 }, (_, i) => currentYear - i);
 
   return (
-    <div className="modal-overlay">
-      <div className="modal-content">
-        <h3>Create Folder</h3>
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-30">
+      <div className="bg-white p-6 rounded-lg max-w-sm w-full">
+        <h3 className="text-lg font-bold mb-4">Create New Folder</h3>
         <select
           value={year}
           onChange={(e) => setYear(e.target.value)}
-          className="input-field"
-          style={{ color: "black" }}
+          className="w-full p-3 mb-2 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none"
         >
           <option value="" disabled>Select Year</option>
           {years.map((yearOption) => (
@@ -66,8 +68,7 @@ const FolderCreationModal = ({ isOpen, onClose, onCreate }) => {
         <select
           value={companyCode}
           onChange={(e) => setCompanyCode(e.target.value)}
-          className="input-field"
-          style={{ color: "black" }}
+          className="w-full p-3 mb-2 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none"
         >
           <option value="" disabled>Select Company Code</option>
           {companies.map((company) => (
@@ -79,8 +80,7 @@ const FolderCreationModal = ({ isOpen, onClose, onCreate }) => {
         <select
           value={assemblyCode}
           onChange={(e) => setAssemblyCode(e.target.value)}
-          className="input-field"
-          style={{ color: "black" }}
+          className="w-full p-3 mb-4 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none"
         >
           <option value="" disabled>Select Assembly Code</option>
           {assemblyCodes.map((assembly) => (
@@ -89,12 +89,18 @@ const FolderCreationModal = ({ isOpen, onClose, onCreate }) => {
             </option>
           ))}
         </select>
-        <div className="modal-actions">
-          <button onClick={handleCreate} className="btn btn-blue">
-            Create
-          </button>
-          <button onClick={onClose} className="btn btn-gray">
+        <div className="flex justify-end gap-2">
+          <button
+            onClick={onClose}
+            className="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-all"
+          >
             Cancel
+          </button>
+          <button
+            onClick={handleCreate}
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-all"
+          >
+            Create
           </button>
         </div>
       </div>

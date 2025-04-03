@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import AdminPage from "./AdminPage";
 import logo from "../assets/logo.png";
 import certs from "../assets/iso-certify-trans.png";
 import FolderCreationModal from "./ModelComponent";
@@ -14,7 +13,12 @@ export default function Dashboard({ authToken, setPage }) {
   useEffect(() => {
     fetchFiles();
   }, [currentPath]);
-
+  const navigateToPathSegment = (index) => {
+    const pathArray = currentPath.split("/");
+    const newPath = pathArray.slice(0, index + 1).join("/");
+    setCurrentPath(newPath);
+  };
+  
   const fetchFiles = async () => {
     try {
       const response = await fetch(
@@ -31,7 +35,7 @@ export default function Dashboard({ authToken, setPage }) {
     }
   };
 
-  const addFolder = async (companyCode, year, assemblyCode) => {
+  const addFolder = async (year, companyCode, assemblyCode) => {
     const folderName = `${companyCode}-${year}-${assemblyCode}`;
     const response = await fetch("http://localhost:5000/api/create-folder", {
       method: "POST",
@@ -121,317 +125,144 @@ export default function Dashboard({ authToken, setPage }) {
 
   return (
     <>
+      {/* Inline CSS for custom fadeIn and slideIn animations */}
       <style>{`
-        html, body {
-          height: 100%;
-          margin: 0;
-          padding: 0;
-          font-family: Arial, sans-serif;
-          background: linear-gradient(to right, #e0eafc, #cfdef3);
-        }
-
-        .header-wrapper {
-          position: sticky;
-          top: 0;
-          z-index: 1000;
-          background: linear-gradient(to right, #e0eafc, #cfdef3);
-          border-bottom: 2px solid #2563eb;
-          box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-
-        .header-content {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          padding: 10px 20px;
-        }
-
-        .header-logo {
-          height: 80px;
-          object-fit: contain;
-        }
-
-        .header-certs {
-          height: 60px;
-          object-fit: contain;
-        }
-
-        .dashboard-section {
-          padding: 2rem 1rem;
-          min-height: calc(100vh - 100px);
-        }
-
-        .dashboard-container {
-          background: #ffffff;
-          padding: 2rem;
-          border-radius: 12px;
-          width: 100%;
-          max-width: 800px;
-          margin: 0 auto;
-          border: 2px solid #3b82f6;
-          animation: fadeIn 1s ease-in-out, borderPulse 3s infinite ease-in-out;
-        }
-
         @keyframes fadeIn {
-          from {
-            opacity: 0;
-          }
-          to {
-            opacity: 1;
-          }
+          from { opacity: 0; }
+          to { opacity: 1; }
         }
-
-        @keyframes borderPulse {
-          0% {
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
-          }
-          50% {
-            box-shadow: 0 0 10px 4px rgba(59, 130, 246, 0.4);
-          }
-          100% {
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
-          }
-        }
-
-        .dashboard-title {
-          text-align: center;
-          font-size: 2rem;
-          margin-bottom: 1.5rem;
-          color: #333;
-          font-weight: bold;
-        }
-
-        .input-field {
-          width: 100%;
-          padding: 0.75rem;
-          margin-bottom: 1rem;
-          border: 1px solid #ccc;
-          border-radius: 6px;
-          font-size: 1rem;
-          transition: border-color 0.3s ease, box-shadow 0.3s ease;
-        }
-
-        .input-field:focus {
-          border-color: #3b82f6;
-          box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
-          outline: none;
-        }
-
-        .btn {
-          padding: 0.75rem 1.5rem;
-          background-color: #3b82f6;
-          color: white;
-          border: none;
-          border-radius: 6px;
-          font-weight: bold;
-          font-size: 1rem;
-          cursor: pointer;
-          transition: background-color 0.3s ease, transform 0.2s ease;
-        }
-
-        .btn:hover:not(.disabled) {
-          background-color: #2563eb;
-          transform: scale(1.05);
-        }
-
-        .btn.disabled {
-          background-color: #9ca3af;
-          cursor: not-allowed;
-        }
-
-        .btn-gray {
-          background-color: #6b7280;
-        }
-
-        .btn-purple {
-          background-color: #7e5bef;
-        }
-
-        .btn-blue {
-          background-color: #3b82f6;
-        }
-
-        .btn-red {
-          background-color: #ef4444;
-        }
-
-        .btn-small {
-          padding: 0.5rem 1rem;
-          font-size: 0.875rem;
-        }
-
-        .file-card {
-          background: #f9fafb;
-          padding: 1rem;
-          border-radius: 8px;
-          border: 1px solid #e2e8f0;
-          transition: box-shadow 0.3s ease, transform 0.3s ease;
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-        }
-
-        .file-card:hover {
-          box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-          transform: translateY(-5px);
-        }
-
-        .file-card span {
-          color: black;
-        }
-
-        .file-card .actions {
-          display: flex;
-          gap: 0.5rem;
-        }
-
-        .file-upload-wrapper {
-          position: relative;
-          display: inline-block;
-          margin-top: 1rem;
-        }
-
-        .file-upload-label {
-          padding: 0.75rem 1.5rem;
-          background-color: #3b82f6;
-          color: white;
-          border: none;
-          border-radius: 6px;
-          font-weight: bold;
-          font-size: 1rem;
-          cursor: pointer;
-          transition: background-color 0.3s ease, transform 0.2s ease;
-        }
-
-        .file-upload-label:hover {
-          background-color: #2563eb;
-          transform: scale(1.05);
-        }
-
-        .file-upload-input {
-          position: absolute;
-          width: 100%;
-          height: 100%;
-          opacity: 0;
-          cursor: pointer;
-        }
-
-        .modal-overlay {
-          position: fixed;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
-          background: rgba(0, 0, 0, 0.5);
-          display: flex;
-          justify-content: center;
-          align-items: center;
-        }
-
-        .modal-content {
-          background: white;
-          padding: 2rem;
-          border-radius: 8px;
-          width: 100%;
-          max-width: 400px;
-        }
-
-        .modal-actions {
-          display: flex;
-          justify-content: flex-end;
-          gap: 1rem;
+        @keyframes slideIn {
+          from { transform: translateX(-20px); opacity: 0; }
+          to { transform: translateX(0); opacity: 1; }
         }
       `}</style>
 
       {/* Header with Logo and Certifications */}
-      <div className="header-wrapper">
-        <div className="header-content">
-          <img src={logo} alt="Company Logo" className="header-logo" />
-          <img src={certs} alt="Certifications" className="header-certs" />
+      <div className="sticky top-0 z-20 bg-gradient-to-r from-blue-100 to-purple-100 border-b-2 border-blue-600 shadow-sm">
+        <div className="flex justify-between items-center p-2 px-5">
+          <img src={logo} alt="Company Logo" className="h-20 object-contain" />
+          <img src={certs} alt="Certifications" className="h-16 object-contain" />
         </div>
       </div>
 
       {/* Dashboard Section */}
-      <div className="dashboard-section">
-        <div className="dashboard-container">
-          <h2 className="dashboard-title">Dashboard</h2>
+      <div className="min-h-screen bg-gradient-to-r from-blue-100 to-purple-100 animate-[fadeIn_1s_ease-in-out]">
+        {/* Sticky Controls Section */}
+        <div className="sticky top-[84px] z-10 bg-gradient-to-r from-blue-100 to-purple-100 p-8 pb-4">
+          {/* Admin Icon in Top Right */}
+          <div className="flex justify-end mb-4">
+            <button
+              onClick={goToAdminPage}
+              className="bg-blue-600 text-white p-2 rounded-full font-bold text-lg hover:bg-blue-700 hover:scale-105 transition-all"
+              title="Go to Admin Page"
+            >
+              👤
+            </button>
+          </div>
 
-          {/* Search Input */}
+          <h2 className="text-4xl font-bold text-center text-gray-700 mb-6">Dashboard</h2>
+
+          {/* Search Input - Full Width */}
           <input
             type="text"
-            placeholder="Search files & folders..."
+            placeholder="Search files & folders or paste a path (e.g., /folder1/folder2)"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="input-field mb-4"
+            className="w-full p-3 mb-4 border border-gray-300 rounded-lg text-base focus:border-blue-600 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
           />
 
-          {/* Back Button */}
+          {/* Back Button and Folder Path */}
           {currentPath && (
-            <button onClick={goBack} className="btn btn-gray mb-4">
-              ⬅ Go Back
-            </button>
+            <div className="flex items-center gap-4 mb-4 mt-2 animate-[slideIn_0.3s_ease-out]">
+              <span
+                onClick={goBack}
+                className="text-2xl cursor-pointer text-gray-700 hover:text-gray-900"
+              >
+                ⬅
+              </span>
+              <div className="flex items-center gap-2 bg-white border border-gray-300 rounded-lg px-4 py-2 shadow-sm">
+                <span className="text-gray-700 font-medium">
+                  /
+                  {currentPath.split("/").map((segment, index) => (
+                    <span key={index}>
+                      <span
+                        onClick={() => navigateToPathSegment(index)}
+                        className="cursor-pointer hover:text-blue-600"
+                      >
+                        {segment}
+                      </span>
+                      {index < currentPath.split("/").length - 1 && "/"}
+                    </span>
+                  ))}
+                </span>
+              </div>
+            </div>
           )}
 
-          {/* Buttons */}
-          <div className="mb-4 flex justify-center gap-4">
-            <button onClick={() => setIsModalOpen(true)} className="btn btn-purple">
+          {/* Add Folder and Choose File - Aligned Together */}
+          <div className="flex justify-center items-center gap-4">
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className="bg-purple-600 text-white px-6 py-3 rounded-lg font-bold text-base hover:bg-purple-700 hover:scale-105 transition-all"
+            >
               Add Folder
             </button>
-            <button className="btn btn-blue mt-6" onClick={goToAdminPage}>
-              Go to Admin Page
-            </button>
+            <div className="relative inline-block">
+              <label
+                htmlFor="file-upload"
+                className="bg-blue-600 text-white px-6 py-3 rounded-lg font-bold text-base cursor-pointer hover:bg-blue-700 hover:scale-105 transition-all"
+              >
+                Choose File
+              </label>
+              <input
+                id="file-upload"
+                type="file"
+                onChange={uploadFile}
+                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+              />
+            </div>
           </div>
+        </div>
 
-          {/* File Upload Input */}
-          <div className="file-upload-wrapper">
-            <label htmlFor="file-upload" className="file-upload-label">
-              Choose File
-            </label>
-            <input
-              id="file-upload"
-              type="file"
-              onChange={uploadFile}
-              className="file-upload-input"
-            />
-          </div>
-
-          {/* Display files and folders */}
-          <div className="space-y-4">
-            {filteredFiles.length > 0 ? (
-              filteredFiles.map((item) => (
-                <div key={item.name} className="file-card">
-                  <span
-                    onClick={() =>
-                      item.type === "folder" && navigateToFolder(item.name)
-                    }
-                    style={{ cursor: item.type === "folder" ? "pointer" : "default" }}
+        {/* Scrollable Files and Folders Section */}
+        <div className="px-12 pt-4 overflow-y-auto max-h-[calc(100vh-300px)]">
+          {filteredFiles.length > 0 ? (
+            filteredFiles.map((item) => (
+              <div
+                key={item.name}
+                className="bg-gray-50 p-4 rounded-lg border border-gray-200 flex justify-between items-center transition-all mb-4"
+              >
+                <span
+                  onClick={() =>
+                    item.type === "folder" && navigateToFolder(item.name)
+                  }
+                  className={item.type === "folder" ? "cursor-pointer text-black" : "text-black"}
+                >
+                  {item.type === "folder" ? "📁" : "📄"} {item.name}
+                </span>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => renameItem(item.name)}
+                    className="bg-blue-600 text-white px-4 py-2 rounded-lg font-bold text-sm hover:bg-blue-700 hover:scale-105 transition-all"
                   >
-                    {item.type === "folder" ? "📁" : "📄"} {item.name}
-                  </span>
-                  <div className="actions">
-                    <button
-                      onClick={() => renameItem(item.name)}
-                      className="btn btn-blue btn-small"
-                    >
-                      Rename
-                    </button>
-                    <button
-                      onClick={() => deleteItem(item.name)}
-                      className="btn btn-red btn-small"
-                    >
-                      Delete
-                    </button>
-                  </div>
+                    Rename
+                  </button>
+                  <button
+                    onClick={() => deleteItem(item.name)}
+                    className="bg-red-500 text-white px-4 py-2 rounded-lg font-bold text-sm hover:bg-red-600 hover:scale-105 transition-all"
+                  >
+                    Delete
+                  </button>
                 </div>
-              ))
-            ) : (
-              <p>No items found</p>
-            )}
-          </div>
+              </div>
+            ))
+          ) : (
+            <p className="text-center text-gray-600">No items found</p>
+          )}
         </div>
       </div>
 
-      {/* Folder Creation Modal */}
+      {/* Folder Creation Modal - Positioned at Root */}
       <FolderCreationModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
