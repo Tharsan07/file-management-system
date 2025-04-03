@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import logo from "../assets/logo.png"; // Corrected relative path
 import certs from "../assets/iso-certify-trans.png"; // Corrected relative path
 
@@ -37,140 +37,20 @@ export default function LoginPage({ setPage, setAuthToken }) {
   };
 
   return (
-    <>
-      <style>{`
-        html, body {
-          height: 100%;
-          margin: 0;
-          padding: 0;
-          font-family: Arial, sans-serif;
-          background: linear-gradient(to right, #e0eafc, #cfdef3);
-        }
-
-        .header-wrapper {
-          position: sticky;
-          top: 0;
-          z-index: 1000;
-          background: linear-gradient(to right, #e0eafc, #cfdef3);
-          border-bottom: 2px solid #2563eb;
-          box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-
-        .header-content {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          padding: 10px 20px;
-        }
-
-        .header-logo {
-          height: 80px;
-          object-fit: contain;
-        }
-
-        .header-certs {
-          height: 60px;
-          object-fit: contain;
-        }
-
-        .login-section {
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          padding: 2rem 1rem;
-          min-height: calc(100vh - 100px);
-        }
-
-        .login-container {
-          background: #ffffff;
-          padding: 2rem;
-          border-radius: 12px;
-          width: 100%;
-          max-width: 400px;
-          border: 2px solid #3b82f6;
-          animation: borderPulse 3s infinite ease-in-out;
-        }
-
-        @keyframes borderPulse {
-          0% {
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
-          }
-          50% {
-            box-shadow: 0 0 10px 4px rgba(59, 130, 246, 0.4);
-          }
-          100% {
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
-          }
-        }
-
-        .login-title {
-          text-align: center;
-          font-size: 2rem;
-          margin-bottom: 1.5rem;
-          color: #333;
-          font-weight: bold;
-        }
-
-        .login-input {
-          width: 100%;
-          padding: 0.75rem;
-          margin-bottom: 1rem;
-          border: 1px solid #ccc;
-          border-radius: 6px;
-          font-size: 1rem;
-          transition: border-color 0.3s ease, box-shadow 0.3s ease;
-        }
-
-        .login-input:focus {
-          border-color: #3b82f6;
-          box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
-          outline: none;
-        }
-
-        .login-button {
-          width: 100%;
-          padding: 0.75rem;
-          background-color: #3b82f6;
-          color: white;
-          border: none;
-          border-radius: 6px;
-          font-weight: bold;
-          font-size: 1rem;
-          cursor: pointer;
-          transition: background-color 0.3s ease, transform 0.2s ease;
-        }
-
-        .login-button:hover:not(.disabled) {
-          background-color: #2563eb;
-          transform: scale(1.02);
-        }
-
-        .login-button.disabled {
-          background-color: #9ca3af;
-          cursor: not-allowed;
-        }
-
-        .error-text {
-          color: #ef4444;
-          margin-bottom: 1rem;
-          font-size: 0.95rem;
-          text-align: center;
-        }
-      `}</style>
-
-      {/* Header with Logo and Certifications */}
-      <div className="header-wrapper">
-        <div className="header-content">
-          <img src={logo} alt="Company Logo" className="header-logo" />
-          <img src={certs} alt="Certifications" className="header-certs" />
+    <div className="min-h-screen bg-gray-100 text-gray-800">
+      {/* Header */}
+      <div className="sticky top-0 z-20 bg-white border-b border-gray-200 shadow-sm">
+        <div className="flex justify-between items-center p-4">
+          <img src={logo} alt="Company Logo" className="h-16 object-contain" />
+          <img src={certs} alt="Certifications" className="h-12 object-contain" />
         </div>
       </div>
 
       {/* Login Form Section */}
-      <div className="login-section">
-        <div className="login-container">
-          <h2 className="login-title">Login</h2>
-          {error && <p className="error-text">{error}</p>}
+      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-80px)]">
+        <div className="bg-white p-8 rounded-md shadow-md w-full max-w-md">
+          <h2 className="text-2xl font-bold text-center text-gray-700 mb-6">Login</h2>
+          {error && <p className="text-red-500 text-center mb-4">{error}</p>}
           <input
             type="text"
             placeholder="Username"
@@ -179,7 +59,7 @@ export default function LoginPage({ setPage, setAuthToken }) {
               setUsername(e.target.value);
               setError("");
             }}
-            className="login-input"
+            className="w-full p-3 mb-4 border border-gray-300 rounded-md focus:border-blue-600 outline-none transition-all"
           />
           <input
             type="password"
@@ -189,17 +69,19 @@ export default function LoginPage({ setPage, setAuthToken }) {
               setPassword(e.target.value);
               setError("");
             }}
-            className="login-input"
+            className="w-full p-3 mb-4 border border-gray-300 rounded-md focus:border-blue-600 outline-none transition-all"
           />
           <button
             onClick={handleLogin}
             disabled={loading}
-            className={`login-button ${loading ? "disabled" : ""}`}
+            className={`w-full p-3 rounded-md text-white font-bold ${
+              loading ? "bg-gray-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"
+            } transition-all`}
           >
             {loading ? "Logging in..." : "Login"}
           </button>
         </div>
       </div>
-    </>
+    </div>
   );
 }

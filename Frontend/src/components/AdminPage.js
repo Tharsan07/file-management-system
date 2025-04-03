@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
+import { Trash2, PlusCircle } from "lucide-react"; // Import Lucide React icons
 import Header from "./header";
 
 export default function AdminPage({ setPage }) {
@@ -99,127 +100,119 @@ export default function AdminPage({ setPage }) {
   };
 
   return (
-    <div className="min-h-screen p-5 bg-gradient-to-br from-gray-100 to-blue-100">
+    <div className="min-h-screen bg-gray-100 text-gray-800">
+      {/* Header */}
       <Header />
-      <header className="text-center mb-8">
-        <h1 className="text-4xl font-bold text-gray-800 mb-2">Admin Panel</h1>
+
+      {/* Back Button */}
+      <div className="p-4 flex justify-between items-center bg-white border-b border-gray-200 shadow-sm">
+        <h1 className="text-lg font-bold">Admin Panel</h1>
         <button
           onClick={() => setPage("dashboard")}
-          className="bg-blue-500 text-white border border-blue-500 px-4 py-2 rounded-md hover:shadow-md transition duration-200"
+          className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-all"
         >
           ← Back to Dashboard
         </button>
-      </header>
+      </div>
 
-      <div className="flex flex-wrap gap-5 justify-center">
+      {/* Content */}
+      <div className="px-4 py-6 grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Company Management */}
-        <div className="flex-1 min-w-[400px] bg-white p-5 rounded-lg border border-gray-200 shadow-md">
-          <h3 className="text-2xl font-semibold text-gray-700 border-b pb-2 mb-4">
-            Manage Companies
-          </h3>
-          <div className="flex flex-wrap gap-2 mb-4">
-            <input
-              type="text"
-              placeholder="Company Name"
-              value={companyName}
-              onChange={(e) => setCompanyName(e.target.value)}
-              className={`flex-1 min-w-[180px] p-2.5 border rounded-md focus:border-blue-500 outline-none transition ${
-                companyName ? "text-black" : ""
-              }`}
-            />
-            <input
-              type="text"
-              placeholder="Company Code"
-              value={companyCode}
-              onChange={(e) => setCompanyCode(e.target.value)}
-              className={`flex-1 min-w-[180px] p-2.5 border rounded-md focus:border-blue-500 outline-none transition ${
-                companyCode ? "text-black" : ""
-              }`}
-            />
-            <button
-              onClick={addCompany}
-              className="px-4 py-2 bg-green-500 text-white rounded-md hover:shadow-md transition duration-200"
-            >
-              Add
-            </button>
-          </div>
-          <ul className="space-y-2">
-            {companies.length === 0 ? (
-              <p className="text-gray-500">No Companies Added</p>
-            ) : (
-              companies.map((c) => (
-                <li
-                  key={c.code}
-                  className="flex justify-between items-center p-2.5 border rounded-md bg-gray-50 hover:shadow-md transition duration-200"
-                >
-                  <span className="text-gray-800">
-                    {c.name} ({c.code})
-                  </span>
-                  <button
-                    onClick={() => deleteCompany(c.code)}
-                    className="px-3 py-1 bg-red-500 text-white rounded-md hover:shadow-md transition duration-200"
+        <div className="bg-white p-6 rounded-md shadow-sm">
+          <h2 className="text-xl font-bold mb-4">Manage Companies</h2>
+          <div className="flex flex-col gap-4">
+            <div className="flex gap-4">
+              <input
+                type="text"
+                placeholder="Company Name"
+                value={companyName}
+                onChange={(e) => setCompanyName(e.target.value)}
+                className="w-full p-2 border border-gray-300 rounded-md focus:border-blue-600 outline-none"
+              />
+              <input
+                type="text"
+                placeholder="Company Code"
+                value={companyCode}
+                onChange={(e) => setCompanyCode(e.target.value)}
+                className="w-full p-2 border border-gray-300 rounded-md focus:border-blue-600 outline-none"
+              />
+              <button
+                onClick={addCompany}
+                className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-all"
+              >
+                <PlusCircle size={16} /> Add
+              </button>
+            </div>
+            <ul className="space-y-2">
+              {companies.length === 0 ? (
+                <p className="text-center text-gray-600">No Companies Added</p>
+              ) : (
+                companies.map((c) => (
+                  <li
+                    key={c.code}
+                    className="flex justify-between items-center p-2 border border-gray-200 rounded-md"
                   >
-                    Delete
-                  </button>
-                </li>
-              ))
-            )}
-          </ul>
+                    <span className="text-gray-700">{c.name} ({c.code})</span>
+                    <button
+                      onClick={() => deleteCompany(c.code)}
+                      className="flex items-center gap-1 bg-red-600 text-white px-2 py-1 rounded-md hover:bg-red-700 transition-all"
+                    >
+                      <Trash2 size={16} /> Delete
+                    </button>
+                  </li>
+                ))
+              )}
+            </ul>
+          </div>
         </div>
 
         {/* Assembly Management */}
-        <div className="flex-1 min-w-[400px] bg-white p-5 rounded-lg border border-gray-200 shadow-md">
-          <h3 className="text-2xl font-semibold text-gray-700 border-b pb-2 mb-4">
-            Manage Assemblies
-          </h3>
-          <div className="flex flex-wrap gap-2 mb-4">
-            <input
-              type="text"
-              placeholder="Assembly Name"
-              value={assemblyName}
-              onChange={(e) => setAssemblyName(e.target.value)}
-              className={`flex-1 min-w-[180px] p-2.5 border rounded-md focus:border-blue-500 outline-none transition ${
-                assemblyName ? "text-black" : ""
-              }`}
-            />
-            <input
-              type="text"
-              placeholder="Assembly Code"
-              value={assemblyCode}
-              onChange={(e) => setAssemblyCode(e.target.value)}
-              className={`flex-1 min-w-[180px] p-2.5 border rounded-md focus:border-blue-500 outline-none transition ${
-                assemblyCode ? "text-black" : ""
-              }`}
-            />
-            <button
-              onClick={addAssembly}
-              className="px-4 py-2 bg-green-500 text-white rounded-md hover:shadow-md transition duration-200"
-            >
-              Add
-            </button>
-          </div>
-          <ul className="space-y-2">
-            {assemblyCodes.length === 0 ? (
-              <p className="text-gray-500">No Assemblies Added</p>
-            ) : (
-              assemblyCodes.map((a) => (
-                <li
-                  key={a.code}
-                  className="flex justify-between items-center p-2.5 border rounded-md bg-gray-50 hover:shadow-md transition duration-200"
-                >
-                  <span className="text-gray-800">
-                    {a.name} ({a.code})
-                  </span>
-                  <button
-                    onClick={() => deleteAssembly(a.code)}
-                    className="px-3 py-1 bg-red-500 text-white rounded-md hover:shadow-md transition duration-200"
+        <div className="bg-white p-6 rounded-md shadow-sm">
+          <h2 className="text-xl font-bold mb-4">Manage Assemblies</h2>
+          <div className="flex flex-col gap-4">
+            <div className="flex gap-4">
+              <input
+                type="text"
+                placeholder="Assembly Name"
+                value={assemblyName}
+                onChange={(e) => setAssemblyName(e.target.value)}
+                className="w-full p-2 border border-gray-300 rounded-md focus:border-blue-600 outline-none"
+              />
+              <input
+                type="text"
+                placeholder="Assembly Code"
+                value={assemblyCode}
+                onChange={(e) => setAssemblyCode(e.target.value)}
+                className="w-full p-2 border border-gray-300 rounded-md focus:border-blue-600 outline-none"
+              />
+              <button
+                onClick={addAssembly}
+                className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-all"
+              >
+                <PlusCircle size={16} /> Add
+              </button>
+            </div>
+            <ul className="space-y-2">
+              {assemblyCodes.length === 0 ? (
+                <p className="text-center text-gray-600">No Assemblies Added</p>
+              ) : (
+                assemblyCodes.map((a) => (
+                  <li
+                    key={a.code}
+                    className="flex justify-between items-center p-2 border border-gray-200 rounded-md"
                   >
-                    Delete
-                  </button>
-                </li>
-              ))
-            )}
-          </ul>
+                    <span className="text-gray-700">{a.name} ({a.code})</span>
+                    <button
+                      onClick={() => deleteAssembly(a.code)}
+                      className="flex items-center gap-1 bg-red-600 text-white px-2 py-1 rounded-md hover:bg-red-700 transition-all"
+                    >
+                      <Trash2 size={16} /> Delete
+                    </button>
+                  </li>
+                ))
+              )}
+            </ul>
+          </div>
         </div>
       </div>
     </div>
