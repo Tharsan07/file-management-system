@@ -1,8 +1,17 @@
 import React, { useState, useEffect } from "react";
+import {
+  Folder,
+  File,
+  ChevronLeft,
+  PlusCircle,
+  UploadCloud,
+} from "lucide-react";
+import RenameModal from "../components/RenameModal";
 import { Folder, File, ChevronLeft, PlusCircle, UploadCloud } from "lucide-react";
 import RenameModal from "../components/RenameModal";
 import ModelComponent from "../components/ModelComponent";
 import Header from "../components/header";
+
 
 export default function Dashboard({ authToken, setPage }) {
   const [files, setFiles] = useState([]);
@@ -21,7 +30,9 @@ export default function Dashboard({ authToken, setPage }) {
   const fetchFiles = async () => {
     try {
       const response = await fetch(
-        `http://localhost:5000/api/folder/list?path=${encodeURIComponent(currentPath)}`
+        `http://localhost:5000/api/folder/list?path=${encodeURIComponent(
+          currentPath
+        )}`
       );
       const data = await response.json();
       if (response.ok) {
@@ -35,8 +46,22 @@ export default function Dashboard({ authToken, setPage }) {
   };
 
   const addFolder = async (year, companyCode, assemblyCode) => {
-    const folderName = `${year}-${companyCode}-${assemblyCode}`;
+    // Support either single folderName or structured naming
+    const folderName =
+      companyCode && assemblyCode
+        ? `${year}-${companyCode}-${assemblyCode}`
+        : year;
+
     try {
+      const response = await fetch(
+        "http://localhost:5000/api/folder/create-folder",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ folderName, path: currentPath }),
+        }
+      );
+
       const response = await fetch("http://localhost:5000/api/folder/create-folder", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -45,6 +70,8 @@ export default function Dashboard({ authToken, setPage }) {
 
       if (response.ok) {
         const data = await response.json();
+        console.log("Folder created:", data.folderName);
+        fetchFiles();
         console.log("Folder created:", data.folderName);
         fetchFiles();
       } else {
@@ -150,6 +177,7 @@ export default function Dashboard({ authToken, setPage }) {
 
   return (
     <div className="min-h-screen bg-gray-100 text-gray-800">
+      <Header />
       <Header />
       <div className="sticky top-0 z-10 bg-white border-b border-gray-200 shadow-sm">
         <div className="flex justify-between items-center p-4">
@@ -292,3 +320,4 @@ export default function Dashboard({ authToken, setPage }) {
     </div>
   );
 }
+
