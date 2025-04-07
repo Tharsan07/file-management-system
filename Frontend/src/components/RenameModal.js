@@ -4,6 +4,7 @@ const RenameModal = ({ isOpen, onClose, onRename, oldName }) => {
   const [newYear, setNewYear] = useState("");
   const [newCompanyCode, setNewCompanyCode] = useState("");
   const [newAssemblyCode, setNewAssemblyCode] = useState("");
+  const [customFolderName, setCustomFolderName] = useState("");
   const [companies, setCompanies] = useState([]);
   const [assemblyCodes, setAssemblyCodes] = useState([]);
 
@@ -33,17 +34,20 @@ const RenameModal = ({ isOpen, onClose, onRename, oldName }) => {
   }, []);
 
   const handleRename = () => {
-    const newName = `${newYear}-${newCompanyCode}-${newAssemblyCode}`;
+    const newName = customFolderName
+      ? customFolderName
+      : `${newYear}-${newCompanyCode}-${newAssemblyCode}`;
+
     onRename(oldName, newName);
     setNewYear("");
     setNewCompanyCode("");
     setNewAssemblyCode("");
+    setCustomFolderName("");
     onClose();
   };
 
   if (!isOpen) return null;
 
-  // Generate years for the dropdown
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: 10 }, (_, i) => currentYear - i);
 
@@ -51,6 +55,15 @@ const RenameModal = ({ isOpen, onClose, onRename, oldName }) => {
     <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-30">
       <div className="bg-white p-6 rounded-lg max-w-sm w-full">
         <h3 className="text-lg font-bold mb-4">Rename Folder</h3>
+
+        <input
+          type="text"
+          placeholder="Custom Folder Name"
+          value={customFolderName}
+          onChange={(e) => setCustomFolderName(e.target.value)}
+          className="w-full p-3 mb-3 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none"
+        />
+
         <select
           value={newYear}
           onChange={(e) => setNewYear(e.target.value)}
@@ -63,6 +76,7 @@ const RenameModal = ({ isOpen, onClose, onRename, oldName }) => {
             </option>
           ))}
         </select>
+
         <select
           value={newCompanyCode}
           onChange={(e) => setNewCompanyCode(e.target.value)}
@@ -75,6 +89,7 @@ const RenameModal = ({ isOpen, onClose, onRename, oldName }) => {
             </option>
           ))}
         </select>
+
         <select
           value={newAssemblyCode}
           onChange={(e) => setNewAssemblyCode(e.target.value)}
@@ -87,6 +102,7 @@ const RenameModal = ({ isOpen, onClose, onRename, oldName }) => {
             </option>
           ))}
         </select>
+
         <div className="flex justify-end gap-2">
           <button
             onClick={onClose}
