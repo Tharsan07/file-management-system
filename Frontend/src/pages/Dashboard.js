@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { Folder, File, ChevronLeft, PlusCircle, UploadCloud } from "lucide-react"; // Import Shadcn UI icons
-import RenameModal from "./RenameModal"; // Import the RenameModal component
-import ModelComponent from "./ModelComponent";
-import Header from "./header";
+import RenameModal from "../components/RenameModal"; // Import the RenameModal component
+import ModelComponent from "../components/ModelComponent";
+import Header from "../components/header";
 export default function Dashboard({ authToken, setPage }) {
   const [files, setFiles] = useState([]);
   const [currentPath, setCurrentPath] = useState("");

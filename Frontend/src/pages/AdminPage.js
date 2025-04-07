@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Trash2, PlusCircle, Pencil } from "lucide-react";
-import Header from "./header";
+import Header from "../components/header";
 
 export default function AdminPage({ setPage }) {
   const [companies, setCompanies] = useState([]);

@@ -1,10 +1,10 @@
 // src/App.js
 import { useState, useEffect } from "react";
-import LoginPage from "./components/LoginPage";
-import Dashboard from "./components/Dashboard";
+import LoginPage from "./pages/LoginPage";
+import Dashboard from "./pages/Dashboard";
 import CreateOptions from "./components/CreateOptions";
 import ProjectView from "./components/ProjectView";
-import AdminPage from "./components/AdminPage"
+import AdminPage from "./pages/AdminPage"
 
 export default function App() {
   const [page, setPage] = useState("login");
