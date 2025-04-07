@@ -1,14 +1,18 @@
 import React, { useState, useEffect } from "react";
-import { Trash2, PlusCircle } from "lucide-react"; // Import Lucide React icons
+import { Trash2, PlusCircle, Pencil } from "lucide-react";
 import Header from "./header";
 
 export default function AdminPage({ setPage }) {
   const [companies, setCompanies] = useState([]);
   const [assemblyCodes, setAssemblyCodes] = useState([]);
+
   const [companyName, setCompanyName] = useState("");
   const [companyCode, setCompanyCode] = useState("");
   const [assemblyName, setAssemblyName] = useState("");
   const [assemblyCode, setAssemblyCode] = useState("");
+
+  const [editingCompany, setEditingCompany] = useState(null);
+  const [editingAssembly, setEditingAssembly] = useState(null);
 
   useEffect(() => {
     fetchCompanies();
@@ -17,8 +21,8 @@ export default function AdminPage({ setPage }) {
 
   const fetchCompanies = async () => {
     try {
-      const response = await fetch("http://localhost:5000/api/admin/company-codes");
-      const data = await response.json();
+      const res = await fetch("http://localhost:5000/api/admin/company-codes");
+      const data = await res.json();
       setCompanies(data.codes || []);
     } catch (err) {
       console.error("Error fetching companies:", err);
@@ -27,192 +31,252 @@ export default function AdminPage({ setPage }) {
 
   const fetchAssemblyCodes = async () => {
     try {
-      const response = await fetch("http://localhost:5000/api/admin/assembly-codes");
-      const data = await response.json();
+      const res = await fetch("http://localhost:5000/api/admin/assembly-codes");
+      const data = await res.json();
       setAssemblyCodes(data.codes || []);
     } catch (err) {
-      console.error("Error fetching assembly codes:", err);
+      console.error("Error fetching assemblies:", err);
     }
   };
 
   const addCompany = async () => {
     if (!companyName || !companyCode) return alert("Enter both fields");
-    const response = await fetch("http://localhost:5000/api/admin/add-company", {
+    const res = await fetch("http://localhost:5000/api/admin/add-company", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name: companyName, code: companyCode }),
     });
-
-    if (response.ok) {
+    if (res.ok) {
       fetchCompanies();
       setCompanyName("");
       setCompanyCode("");
-    } else {
-      alert("Failed to add company");
-    }
+    } else alert("Failed to add company");
   };
 
   const addAssembly = async () => {
     if (!assemblyName || !assemblyCode) return alert("Enter both fields");
-    const response = await fetch("http://localhost:5000/api/admin/add-assembly", {
+    const res = await fetch("http://localhost:5000/api/admin/add-assembly", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name: assemblyName, code: assemblyCode }),
     });
-
-    if (response.ok) {
+    if (res.ok) {
       fetchAssemblyCodes();
       setAssemblyName("");
       setAssemblyCode("");
-    } else {
-      alert("Failed to add assembly");
-    }
+    } else alert("Failed to add assembly");
   };
 
   const deleteCompany = async (code) => {
     if (!window.confirm("Are you sure?")) return;
-    const response = await fetch("http://localhost:5000/api/admin/delete-company", {
+    const res = await fetch("http://localhost:5000/api/admin/delete-company", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ code }),
     });
-
-    if (response.ok) {
-      fetchCompanies();
-    } else {
-      alert("Failed to delete company");
-    }
+    if (res.ok) fetchCompanies();
+    else alert("Failed to delete company");
   };
 
   const deleteAssembly = async (code) => {
     if (!window.confirm("Are you sure?")) return;
-    const response = await fetch("http://localhost:5000/api/admin/delete-assembly", {
+    const res = await fetch("http://localhost:5000/api/admin/delete-assembly", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ code }),
     });
+    if (res.ok) fetchAssemblyCodes();
+    else alert("Failed to delete assembly");
+  };
 
-    if (response.ok) {
+  const editCompany = async () => {
+    const { oldCode, name, code } = editingCompany;
+    const res = await fetch("http://localhost:5000/api/admin/edit-company", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ oldCode, newName: name, newCode: code }),
+    });
+    if (res.ok) {
+      fetchCompanies();
+      setEditingCompany(null);
+    } else alert("Failed to update company");
+  };
+
+  const editAssembly = async () => {
+    const { oldCode, name, code } = editingAssembly;
+    const res = await fetch("http://localhost:5000/api/admin/edit-assembly", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ oldCode, newName: name, newCode: code }),
+    });
+    if (res.ok) {
       fetchAssemblyCodes();
-    } else {
-      alert("Failed to delete assembly");
-    }
+      setEditingAssembly(null);
+    } else alert("Failed to update assembly");
   };
 
   return (
     <div className="min-h-screen bg-gray-100 text-gray-800">
-      {/* Header */}
       <Header />
-
-      {/* Back Button */}
       <div className="p-4 flex justify-between items-center bg-white border-b border-gray-200 shadow-sm">
         <h1 className="text-lg font-bold">Admin Panel</h1>
         <button
           onClick={() => setPage("dashboard")}
-          className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-all"
+          className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
         >
           ← Back to Dashboard
         </button>
       </div>
 
-      {/* Content */}
       <div className="px-4 py-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Company Management */}
+        {/* Company Section */}
         <div className="bg-white p-6 rounded-md shadow-sm">
           <h2 className="text-xl font-bold mb-4">Manage Companies</h2>
-          <div className="flex flex-col gap-4">
-            <div className="flex gap-4">
-              <input
-                type="text"
-                placeholder="Company Name"
-                value={companyName}
-                onChange={(e) => setCompanyName(e.target.value)}
-                className="w-full p-2 border border-gray-300 rounded-md focus:border-blue-600 outline-none"
-              />
-              <input
-                type="text"
-                placeholder="Company Code"
-                value={companyCode}
-                onChange={(e) => setCompanyCode(e.target.value)}
-                className="w-full p-2 border border-gray-300 rounded-md focus:border-blue-600 outline-none"
-              />
-              <button
-                onClick={addCompany}
-                className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-all"
-              >
-                <PlusCircle size={16} /> Add
-              </button>
-            </div>
-            <ul className="space-y-2">
-              {companies.length === 0 ? (
-                <p className="text-center text-gray-600">No Companies Added</p>
-              ) : (
-                companies.map((c) => (
-                  <li
-                    key={c.code}
-                    className="flex justify-between items-center p-2 border border-gray-200 rounded-md"
-                  >
-                    <span className="text-gray-700">{c.name} ({c.code})</span>
-                    <button
-                      onClick={() => deleteCompany(c.code)}
-                      className="flex items-center gap-1 bg-red-600 text-white px-2 py-1 rounded-md hover:bg-red-700 transition-all"
-                    >
-                      <Trash2 size={16} /> Delete
-                    </button>
-                  </li>
-                ))
-              )}
-            </ul>
+          <div className="flex gap-4 mb-4">
+            <input
+              type="text"
+              placeholder="Company Name"
+              value={companyName}
+              onChange={(e) => setCompanyName(e.target.value)}
+              className="w-full p-2 border border-gray-300 rounded-md"
+            />
+            <input
+              type="text"
+              placeholder="Company Code"
+              value={companyCode}
+              onChange={(e) => setCompanyCode(e.target.value)}
+              className="w-full p-2 border border-gray-300 rounded-md"
+            />
+            <button
+              onClick={addCompany}
+              className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700"
+            >
+              <PlusCircle size={16} className="inline-block" /> Add
+            </button>
           </div>
+          <ul className="space-y-2">
+            {companies.map((c) => (
+              <li
+                key={c.code}
+                className="flex justify-between items-center p-2 border border-gray-200 rounded-md"
+              >
+                {editingCompany?.oldCode === c.code ? (
+                  <div className="flex gap-2 w-full">
+                    <input
+                      value={editingCompany.name}
+                      onChange={(e) =>
+                        setEditingCompany({ ...editingCompany, name: e.target.value })
+                      }
+                      className="w-full p-1 border border-gray-300 rounded-md"
+                    />
+                    <input
+                      value={editingCompany.code}
+                      onChange={(e) =>
+                        setEditingCompany({ ...editingCompany, code: e.target.value })
+                      }
+                      className="w-full p-1 border border-gray-300 rounded-md"
+                    />
+                    <button onClick={editCompany} className="bg-blue-500 text-white px-2 rounded-md">
+                      Save
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    <span>{c.name} ({c.code})</span>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => setEditingCompany({ oldCode: c.code, name: c.name, code: c.code })}
+                        className="bg-yellow-500 text-white px-2 py-1 rounded-md hover:bg-yellow-600"
+                      >
+                        <Pencil size={16} />
+                      </button>
+                      <button
+                        onClick={() => deleteCompany(c.code)}
+                        className="bg-red-600 text-white px-2 py-1 rounded-md hover:bg-red-700"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  </>
+                )}
+              </li>
+            ))}
+          </ul>
         </div>
 
-        {/* Assembly Management */}
+        {/* Assembly Section */}
         <div className="bg-white p-6 rounded-md shadow-sm">
           <h2 className="text-xl font-bold mb-4">Manage Assemblies</h2>
-          <div className="flex flex-col gap-4">
-            <div className="flex gap-4">
-              <input
-                type="text"
-                placeholder="Assembly Name"
-                value={assemblyName}
-                onChange={(e) => setAssemblyName(e.target.value)}
-                className="w-full p-2 border border-gray-300 rounded-md focus:border-blue-600 outline-none"
-              />
-              <input
-                type="text"
-                placeholder="Assembly Code"
-                value={assemblyCode}
-                onChange={(e) => setAssemblyCode(e.target.value)}
-                className="w-full p-2 border border-gray-300 rounded-md focus:border-blue-600 outline-none"
-              />
-              <button
-                onClick={addAssembly}
-                className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-all"
-              >
-                <PlusCircle size={16} /> Add
-              </button>
-            </div>
-            <ul className="space-y-2">
-              {assemblyCodes.length === 0 ? (
-                <p className="text-center text-gray-600">No Assemblies Added</p>
-              ) : (
-                assemblyCodes.map((a) => (
-                  <li
-                    key={a.code}
-                    className="flex justify-between items-center p-2 border border-gray-200 rounded-md"
-                  >
-                    <span className="text-gray-700">{a.name} ({a.code})</span>
-                    <button
-                      onClick={() => deleteAssembly(a.code)}
-                      className="flex items-center gap-1 bg-red-600 text-white px-2 py-1 rounded-md hover:bg-red-700 transition-all"
-                    >
-                      <Trash2 size={16} /> Delete
-                    </button>
-                  </li>
-                ))
-              )}
-            </ul>
+          <div className="flex gap-4 mb-4">
+            <input
+              type="text"
+              placeholder="Assembly Name"
+              value={assemblyName}
+              onChange={(e) => setAssemblyName(e.target.value)}
+              className="w-full p-2 border border-gray-300 rounded-md"
+            />
+            <input
+              type="text"
+              placeholder="Assembly Code"
+              value={assemblyCode}
+              onChange={(e) => setAssemblyCode(e.target.value)}
+              className="w-full p-2 border border-gray-300 rounded-md"
+            />
+            <button
+              onClick={addAssembly}
+              className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700"
+            >
+              <PlusCircle size={16} className="inline-block" /> Add
+            </button>
           </div>
+          <ul className="space-y-2">
+            {assemblyCodes.map((a) => (
+              <li
+                key={a.code}
+                className="flex justify-between items-center p-2 border border-gray-200 rounded-md"
+              >
+                {editingAssembly?.oldCode === a.code ? (
+                  <div className="flex gap-2 w-full">
+                    <input
+                      value={editingAssembly.name}
+                      onChange={(e) =>
+                        setEditingAssembly({ ...editingAssembly, name: e.target.value })
+                      }
+                      className="w-full p-1 border border-gray-300 rounded-md"
+                    />
+                    <input
+                      value={editingAssembly.code}
+                      onChange={(e) =>
+                        setEditingAssembly({ ...editingAssembly, code: e.target.value })
+                      }
+                      className="w-full p-1 border border-gray-300 rounded-md"
+                    />
+                    <button onClick={editAssembly} className="bg-blue-500 text-white px-2 rounded-md">
+                      Save
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    <span>{a.name} ({a.code})</span>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => setEditingAssembly({ oldCode: a.code, name: a.name, code: a.code })}
+                        className="bg-yellow-500 text-white px-2 py-1 rounded-md hover:bg-yellow-600"
+                      >
+                        <Pencil size={16} />
+                      </button>
+                      <button
+                        onClick={() => deleteAssembly(a.code)}
+                        className="bg-red-600 text-white px-2 py-1 rounded-md hover:bg-red-700"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  </>
+                )}
+              </li>
+            ))}
+          </ul>
         </div>
       </div>
     </div>

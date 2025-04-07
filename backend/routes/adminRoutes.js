@@ -126,4 +126,68 @@ router.post("/delete-assembly", async (req, res) => {
   }
 });
 
+// Edit company
+router.post("/edit-company", async (req, res) => {
+  const { oldCode, newCode, newName } = req.body;
+  if (!oldCode || !newCode || !newName) {
+    return res.status(400).json({ message: "Old code, new code, and new name are required!" });
+  }
+
+  const conn = await pool.getConnection();
+  try {
+    // Check if company with oldCode exists
+    const [existingCompany] = await conn.execute("SELECT * FROM companies WHERE code = ?", [oldCode]);
+    if (existingCompany.length === 0) {
+      return res.status(404).json({ message: "Company not found!" });
+    }
+
+    // If code is changing, make sure newCode isn't already taken
+    if (oldCode !== newCode) {
+      const [conflict] = await conn.execute("SELECT * FROM companies WHERE code = ?", [newCode]);
+      if (conflict.length > 0) {
+        return res.status(400).json({ message: "New company code already exists!" });
+      }
+    }
+
+    await conn.execute("UPDATE companies SET code = ?, name = ? WHERE code = ?", [newCode, newName, oldCode]);
+    res.json({ message: "Company updated successfully!" });
+  } catch (err) {
+    res.status(500).json({ message: "Error editing company.", error: err.toString() });
+  } finally {
+    conn.release();
+  }
+});
+
+
+// Edit assembly
+router.post("/edit-assembly", async (req, res) => {
+  const { oldCode, newCode, newName } = req.body;
+  if (!oldCode || !newCode || !newName) {
+    return res.status(400).json({ message: "Old code, new code, and new name are required!" });
+  }
+
+  const conn = await pool.getConnection();
+  try {
+    const [existingAssembly] = await conn.execute("SELECT * FROM assemblies WHERE code = ?", [oldCode]);
+    if (existingAssembly.length === 0) {
+      return res.status(404).json({ message: "Assembly not found!" });
+    }
+
+    if (oldCode !== newCode) {
+      const [conflict] = await conn.execute("SELECT * FROM assemblies WHERE code = ?", [newCode]);
+      if (conflict.length > 0) {
+        return res.status(400).json({ message: "New assembly code already exists!" });
+      }
+    }
+
+    await conn.execute("UPDATE assemblies SET code = ?, name = ? WHERE code = ?", [newCode, newName, oldCode]);
+    res.json({ message: "Assembly updated successfully!" });
+  } catch (err) {
+    res.status(500).json({ message: "Error editing assembly.", error: err.toString() });
+  } finally {
+    conn.release();
+  }
+});
+
+
 module.exports = router;
