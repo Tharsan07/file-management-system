@@ -10,7 +10,7 @@ const FolderCreationModal = ({ isOpen, onClose, onCreate }) => {
   useEffect(() => {
     const fetchCompanies = async () => {
       try {
-        const response = await fetch("http://localhost:5000/api/company-codes");
+        const response = await fetch("http://localhost:5000/api/admin/company-codes");
         const data = await response.json();
         console.log("Fetched companies:", data); // Debugging line
         setCompanies(data.codes || []);
@@ -21,7 +21,7 @@ const FolderCreationModal = ({ isOpen, onClose, onCreate }) => {
 
     const fetchAssemblyCodes = async () => {
       try {
-        const response = await fetch("http://localhost:5000/api/assembly-codes");
+        const response = await fetch("http://localhost:5000/api/admin/assembly-codes");
         const data = await response.json();
         console.log("Fetched assembly codes:", data); // Debugging line
         setAssemblyCodes(data.codes || []);

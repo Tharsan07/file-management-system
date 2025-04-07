@@ -10,7 +10,7 @@ const RenameModal = ({ isOpen, onClose, onRename, oldName }) => {
   useEffect(() => {
     const fetchCompanies = async () => {
       try {
-        const response = await fetch("http://localhost:5000/api/company-codes");
+        const response = await fetch("http://localhost:5000/api/admin/company-codes");
         const data = await response.json();
         setCompanies(data.codes || []);
       } catch (err) {
@@ -20,7 +20,7 @@ const RenameModal = ({ isOpen, onClose, onRename, oldName }) => {
 
     const fetchAssemblyCodes = async () => {
       try {
-        const response = await fetch("http://localhost:5000/api/assembly-codes");
+        const response = await fetch("http://localhost:5000/api/admin/assembly-codes");
         const data = await response.json();
         setAssemblyCodes(data.codes || []);
       } catch (err) {

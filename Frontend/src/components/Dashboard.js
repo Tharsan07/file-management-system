@@ -19,7 +19,7 @@ export default function Dashboard({ authToken, setPage }) {
   const fetchFiles = async () => {
     try {
       const response = await fetch(
-        `http://localhost:5000/api/list?path=${encodeURIComponent(currentPath)}`
+        `http://localhost:5000/api/folder/list?path=${encodeURIComponent(currentPath)}`
       );
       const data = await response.json();
       if (response.ok) {
@@ -35,7 +35,7 @@ export default function Dashboard({ authToken, setPage }) {
   const addFolder = async (year, companyCode, assemblyCode) => {
     const folderName = `${year}-${companyCode}-${assemblyCode}`;
     try {
-      const response = await fetch("http://localhost:5000/api/create-folder", {
+      const response = await fetch("http://localhost:5000/api/folder/create-folder", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ folderName, path: currentPath }),
@@ -57,7 +57,7 @@ export default function Dashboard({ authToken, setPage }) {
 
   const deleteItem = async (name) => {
     if (window.confirm("Are you sure you want to delete this item?")) {
-      const response = await fetch("http://localhost:5000/api/delete", {
+      const response = await fetch("http://localhost:5000/api/folder/delete", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, path: currentPath }),
@@ -76,7 +76,7 @@ export default function Dashboard({ authToken, setPage }) {
   };
 
   const handleRename = async (oldName, newName) => {
-    const response = await fetch("http://localhost:5000/api/rename", {
+    const response = await fetch("http://localhost:5000/api/folder/rename", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ oldName, newName, path: currentPath }),
@@ -94,7 +94,7 @@ export default function Dashboard({ authToken, setPage }) {
     const formData = new FormData();
     formData.append("file", file);
     formData.append("path", currentPath);
-    const response = await fetch("http://localhost:5000/api/upload", {
+    const response = await fetch("http://localhost:5000/api/folder/upload", {
       method: "POST",
       body: formData,
     });

@@ -10,7 +10,7 @@ export default function ProjectView({ setPage }) {
 
   const fetchFiles = async () => {
     try {
-      const response = await fetch(`http://localhost:5000/api/list?path=${currentPath}`);
+      const response = await fetch(`http://localhost:5000/api/folder/list?path=${currentPath}`);
       const data = await response.json();
       setFiles(data);
     } catch (error) {
@@ -23,7 +23,7 @@ export default function ProjectView({ setPage }) {
     if (!folderName) return;
 
     try {
-      const response = await fetch("http://localhost:5000/api/create-folder", {
+      const response = await fetch("http://localhost:5000/api/folder/create-folder", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ folderName, path: currentPath }),
@@ -43,7 +43,7 @@ export default function ProjectView({ setPage }) {
     if (!window.confirm("Are you sure you want to delete this item?")) return;
 
     try {
-      await fetch("http://localhost:5000/api/delete", {
+      await fetch("http://localhost:5000/api/folder/delete", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, path: currentPath }),
@@ -60,7 +60,7 @@ export default function ProjectView({ setPage }) {
     if (!newName) return;
 
     try {
-      await fetch("http://localhost:5000/api/rename", {
+      await fetch("http://localhost:5000/api/folder/rename", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ oldName, newName, path: currentPath }),
@@ -81,7 +81,7 @@ export default function ProjectView({ setPage }) {
     formData.append("path", currentPath);
 
     try {
-      await fetch("http://localhost:5000/api/upload", {
+      await fetch("http://localhost:5000/api/folder/upload", {
         method: "POST",
         body: formData,
       });

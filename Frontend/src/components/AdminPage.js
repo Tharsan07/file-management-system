@@ -17,7 +17,7 @@ export default function AdminPage({ setPage }) {
 
   const fetchCompanies = async () => {
     try {
-      const response = await fetch("http://localhost:5000/api/company-codes");
+      const response = await fetch("http://localhost:5000/api/admin/company-codes");
       const data = await response.json();
       setCompanies(data.codes || []);
     } catch (err) {
@@ -27,7 +27,7 @@ export default function AdminPage({ setPage }) {
 
   const fetchAssemblyCodes = async () => {
     try {
-      const response = await fetch("http://localhost:5000/api/assembly-codes");
+      const response = await fetch("http://localhost:5000/api/admin/assembly-codes");
       const data = await response.json();
       setAssemblyCodes(data.codes || []);
     } catch (err) {
@@ -37,7 +37,7 @@ export default function AdminPage({ setPage }) {
 
   const addCompany = async () => {
     if (!companyName || !companyCode) return alert("Enter both fields");
-    const response = await fetch("http://localhost:5000/api/add-company", {
+    const response = await fetch("http://localhost:5000/api/admin/add-company", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name: companyName, code: companyCode }),
@@ -54,7 +54,7 @@ export default function AdminPage({ setPage }) {
 
   const addAssembly = async () => {
     if (!assemblyName || !assemblyCode) return alert("Enter both fields");
-    const response = await fetch("http://localhost:5000/api/add-assembly", {
+    const response = await fetch("http://localhost:5000/api/admin/add-assembly", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name: assemblyName, code: assemblyCode }),
@@ -71,7 +71,7 @@ export default function AdminPage({ setPage }) {
 
   const deleteCompany = async (code) => {
     if (!window.confirm("Are you sure?")) return;
-    const response = await fetch("http://localhost:5000/api/delete-company", {
+    const response = await fetch("http://localhost:5000/api/admin/delete-company", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ code }),
@@ -86,7 +86,7 @@ export default function AdminPage({ setPage }) {
 
   const deleteAssembly = async (code) => {
     if (!window.confirm("Are you sure?")) return;
-    const response = await fetch("http://localhost:5000/api/delete-assembly", {
+    const response = await fetch("http://localhost:5000/api/admin/delete-assembly", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ code }),
