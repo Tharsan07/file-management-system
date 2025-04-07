@@ -6,11 +6,11 @@ module.exports = (sequelize, DataTypes) => {
     username: {
       type: DataTypes.STRING,
       unique: true,
-      allowNull: false
+      allowNull: true
     },
     password: {
       type: DataTypes.STRING,
-      allowNull: false
+      allowNull: true
     }
   }, {
     hooks: {
@@ -18,7 +18,8 @@ module.exports = (sequelize, DataTypes) => {
         const salt = await bcrypt.genSalt(10);
         user.password = await bcrypt.hash(user.password, salt);
       }
-    }
+    },
+    timestamps: true // ensures createdAt and updatedAt are included
   });
 
   User.prototype.validatePassword = async function(password) {
