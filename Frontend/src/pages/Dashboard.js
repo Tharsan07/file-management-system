@@ -10,6 +10,7 @@ import RenameModal from "../components/RenameModal";
 import ModelComponent from "../components/ModelComponent";
 import Header from "../components/header";
 
+
 export default function Dashboard({ authToken, setPage }) {
   const [files, setFiles] = useState([]);
   const [currentPath, setCurrentPath] = useState("");
@@ -18,6 +19,7 @@ export default function Dashboard({ authToken, setPage }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isRenameModalOpen, setIsRenameModalOpen] = useState(false);
   const [itemToRename, setItemToRename] = useState(null);
+  const [sortOption, setSortOption] = useState("name"); // Add state for sorting option
 
   useEffect(() => {
     fetchFiles();
@@ -49,17 +51,16 @@ export default function Dashboard({ authToken, setPage }) {
         : year;
 
     try {
-      const response = await fetch(
-        "http://localhost:5000/api/folder/create-folder",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ folderName, path: currentPath }),
-        }
-      );
+      const response = await fetch("http://localhost:5000/api/folder/create-folder", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ folderName, path: currentPath }),
+      });
 
       if (response.ok) {
         const data = await response.json();
+        console.log("Folder created:", data.folderName);
+        fetchFiles();
         console.log("Folder created:", data.folderName);
         fetchFiles();
       } else {
@@ -144,9 +145,24 @@ export default function Dashboard({ authToken, setPage }) {
     setCurrentPath(newPath);
   };
 
+  const sortFiles = (files) => {
+    switch (sortOption) {
+      case "name":
+        return files.sort((a, b) => a.name.localeCompare(b.name));
+      case "date":
+        return files.sort((a, b) => new Date(b.date) - new Date(a.date));
+      case "size":
+        return files.sort((a, b) => b.size - a.size);
+      default:
+        return files;
+    }
+  };
+
   const filteredFiles = files.filter((item) =>
     item.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const sortedFiles = sortFiles(filteredFiles);
 
   return (
     <div className="min-h-screen bg-gray-100 text-gray-800">
@@ -199,6 +215,15 @@ export default function Dashboard({ authToken, setPage }) {
             onChange={uploadFile}
             className="hidden"
           />
+          <select
+            value={sortOption}
+            onChange={(e) => setSortOption(e.target.value)}
+            className="p-2 border border-gray-300 rounded-md focus:border-gray-400 outline-none"
+          >
+            <option value="name">Sort by Name</option>
+            <option value="date">Sort by Date</option>
+            <option value="size">Sort by Size</option>
+          </select>
         </div>
       </div>
 
@@ -229,8 +254,8 @@ export default function Dashboard({ authToken, setPage }) {
       </div>
 
       <div className="px-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filteredFiles.length > 0 ? (
-          filteredFiles.map((item) => (
+        {sortedFiles.length > 0 ? (
+          sortedFiles.map((item) => (
             <div
               key={item.name}
               className="bg-white p-4 rounded-md shadow-sm flex flex-col items-center justify-center"
@@ -269,7 +294,6 @@ export default function Dashboard({ authToken, setPage }) {
         )}
       </div>
 
-      {/* Modals */}
       <ModelComponent
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
@@ -284,3 +308,4 @@ export default function Dashboard({ authToken, setPage }) {
     </div>
   );
 }
+
