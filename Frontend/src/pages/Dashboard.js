@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { Folder, File, ChevronLeft, PlusCircle, UploadCloud } from "lucide-react"; // Import Shadcn UI icons
-import RenameModal from "../components/RenameModal"; // Import the RenameModal component
+import { Folder, File, ChevronLeft, PlusCircle, UploadCloud } from "lucide-react";
+import RenameModal from "../components/RenameModal";
 import ModelComponent from "../components/ModelComponent";
 import Header from "../components/header";
+
 export default function Dashboard({ authToken, setPage }) {
   const [files, setFiles] = useState([]);
   const [currentPath, setCurrentPath] = useState("");
@@ -11,6 +12,7 @@ export default function Dashboard({ authToken, setPage }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isRenameModalOpen, setIsRenameModalOpen] = useState(false);
   const [itemToRename, setItemToRename] = useState(null);
+  const [sortOption, setSortOption] = useState("name"); // Add state for sorting option
 
   useEffect(() => {
     fetchFiles();
@@ -40,11 +42,11 @@ export default function Dashboard({ authToken, setPage }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ folderName, path: currentPath }),
       });
-  
+
       if (response.ok) {
         const data = await response.json();
-        console.log("Folder created:", data.folderName); // Log the actual folder name
-        fetchFiles(); // Refresh the file list
+        console.log("Folder created:", data.folderName);
+        fetchFiles();
       } else {
         const data = await response.json();
         alert(`Folder creation failed: ${data.message}`);
@@ -127,14 +129,28 @@ export default function Dashboard({ authToken, setPage }) {
     setCurrentPath(newPath);
   };
 
+  const sortFiles = (files) => {
+    switch (sortOption) {
+      case "name":
+        return files.sort((a, b) => a.name.localeCompare(b.name));
+      case "date":
+        return files.sort((a, b) => new Date(b.date) - new Date(a.date));
+      case "size":
+        return files.sort((a, b) => b.size - a.size);
+      default:
+        return files;
+    }
+  };
+
   const filteredFiles = files.filter((item) =>
     item.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const sortedFiles = sortFiles(filteredFiles);
+
   return (
     <div className="min-h-screen bg-gray-100 text-gray-800">
-      {/* Header */}
-      <Header/>
+      <Header />
       <div className="sticky top-0 z-10 bg-white border-b border-gray-200 shadow-sm">
         <div className="flex justify-between items-center p-4">
           <h1 className="text-lg font-bold">File Manager</h1>
@@ -156,7 +172,6 @@ export default function Dashboard({ authToken, setPage }) {
         </div>
       </div>
 
-      {/* Toolbar */}
       <div className="p-5 flex flex-col md:flex-row justify-between items-center">
         <input
           type="text"
@@ -184,10 +199,18 @@ export default function Dashboard({ authToken, setPage }) {
             onChange={uploadFile}
             className="hidden"
           />
+          <select
+            value={sortOption}
+            onChange={(e) => setSortOption(e.target.value)}
+            className="p-2 border border-gray-300 rounded-md focus:border-gray-400 outline-none"
+          >
+            <option value="name">Sort by Name</option>
+            <option value="date">Sort by Date</option>
+            <option value="size">Sort by Size</option>
+          </select>
         </div>
       </div>
 
-      {/* Navigation */}
       <div className="p-4">
         {currentPath && (
           <div className="flex items-center gap-2 mb-4">
@@ -214,10 +237,9 @@ export default function Dashboard({ authToken, setPage }) {
         )}
       </div>
 
-      {/* Files and Folders */}
       <div className="px-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filteredFiles.length > 0 ? (
-          filteredFiles.map((item) => (
+        {sortedFiles.length > 0 ? (
+          sortedFiles.map((item) => (
             <div
               key={item.name}
               className="bg-white p-4 rounded-md shadow-sm flex flex-col items-center justify-center"
@@ -256,7 +278,6 @@ export default function Dashboard({ authToken, setPage }) {
         )}
       </div>
 
-      {/* Modals */}
       <ModelComponent
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
