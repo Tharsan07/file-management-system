@@ -7,8 +7,6 @@ import {
   UploadCloud,
 } from "lucide-react";
 import RenameModal from "../components/RenameModal";
-import { Folder, File, ChevronLeft, PlusCircle, UploadCloud } from "lucide-react";
-import RenameModal from "../components/RenameModal";
 import ModelComponent from "../components/ModelComponent";
 import Header from "../components/header";
 
@@ -53,15 +51,6 @@ export default function Dashboard({ authToken, setPage }) {
         : year;
 
     try {
-      const response = await fetch(
-        "http://localhost:5000/api/folder/create-folder",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ folderName, path: currentPath }),
-        }
-      );
-
       const response = await fetch("http://localhost:5000/api/folder/create-folder", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -177,7 +166,6 @@ export default function Dashboard({ authToken, setPage }) {
 
   return (
     <div className="min-h-screen bg-gray-100 text-gray-800">
-      <Header />
       <Header />
       <div className="sticky top-0 z-10 bg-white border-b border-gray-200 shadow-sm">
         <div className="flex justify-between items-center p-4">

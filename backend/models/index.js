@@ -12,8 +12,18 @@ db.sequelize = sequelize;
 db.User = require('./user')(sequelize, Sequelize);
 db.File = require('./file')(sequelize, Sequelize);
 
+db.Product = require('./product')(sequelize, Sequelize); 
+
 // Associations
 db.User.hasMany(db.File, { foreignKey: 'userId' });
 db.File.belongsTo(db.User, { foreignKey: 'userId' });
+
+db.sequelize.sync({ alter: true })
+  .then(() => {
+    console.log('✅ Tables synced with DB');
+  })
+  .catch((err) => {
+    console.error('❌ Error syncing tables:', err);
+  });
 
 module.exports = db;
