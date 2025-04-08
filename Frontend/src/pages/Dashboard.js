@@ -7,9 +7,7 @@ import {
   UploadCloud,
 } from "lucide-react";
 import RenameModal from "../components/RenameModal";
-import ModelComponent from "../components/ModelComponent";
 import Header from "../components/header";
-
 
 export default function Dashboard({ authToken, setPage }) {
   const [files, setFiles] = useState([]);
@@ -19,11 +17,19 @@ export default function Dashboard({ authToken, setPage }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isRenameModalOpen, setIsRenameModalOpen] = useState(false);
   const [itemToRename, setItemToRename] = useState(null);
-  const [sortOption, setSortOption] = useState("name"); // Add state for sorting option
+  const [sortOption, setSortOption] = useState("name");
+  const [year, setYear] = useState("");
+  const [companyCode, setCompanyCode] = useState("");
+  const [assemblyCode, setAssemblyCode] = useState("");
 
   useEffect(() => {
     fetchFiles();
   }, [currentPath]);
+
+  const logout = () => {
+    localStorage.removeItem("authToken");
+    setPage("login");
+  };
 
   const fetchFiles = async () => {
     try {
@@ -44,25 +50,25 @@ export default function Dashboard({ authToken, setPage }) {
   };
 
   const addFolder = async (year, companyCode, assemblyCode) => {
-    // Support either single folderName or structured naming
     const folderName =
       companyCode && assemblyCode
         ? `${year}-${companyCode}-${assemblyCode}`
         : year;
 
     try {
-      const response = await fetch("http://localhost:5000/api/folder/create-folder", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ folderName, path: currentPath }),
-      });
+      const response = await fetch(
+        "http://localhost:5000/api/folder/create-folder",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ folderName, path: currentPath }),
+        }
+      );
 
       if (response.ok) {
         const data = await response.json();
-        console.log("Folder created:", data.folderName);
         fetchFiles();
         console.log("Folder created:", data.folderName);
-        fetchFiles();
       } else {
         const data = await response.json();
         alert(`Folder creation failed: ${data.message}`);
@@ -174,13 +180,13 @@ export default function Dashboard({ authToken, setPage }) {
             <span className="text-sm font-medium">Welcome, User</span>
             <button
               onClick={goToAdminPage}
-              className="bg-green-600 text-white px-4 py-2 rounded-md"
+              className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-xl shadow-md transition-all"
             >
               Admin
             </button>
             <button
-              onClick={() => setPage("logout")}
-              className="bg-red-600 text-white px-4 py-2 rounded-md"
+              onClick={logout}
+              className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-xl shadow-md transition-all"
             >
               Logout
             </button>
@@ -188,24 +194,36 @@ export default function Dashboard({ authToken, setPage }) {
         </div>
       </div>
 
-      <div className="p-5 flex flex-col md:flex-row justify-between items-center">
-        <input
-          type="text"
-          placeholder="Search files & folders"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full md:w-auto p-2 mb-4 md:mb-0 border border-gray-300 rounded-md focus:border-gray-400 outline-none"
-        />
-        <div className="flex gap-4 mt-4 md:mt-0">
+      <div className="p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 flex-wrap">
+        <div className="flex-1 flex items-center gap-4">
+          <input
+            type="text"
+            placeholder="Search files & folders"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full md:w-96 p-3 border border-gray-300 rounded-xl shadow-inner focus:border-gray-500 focus:ring-2 focus:ring-blue-300 outline-none transition-all"
+          />
+          <select
+            value={sortOption}
+            onChange={(e) => setSortOption(e.target.value)}
+            className="p-3 border border-gray-300 rounded-xl shadow-inner focus:border-gray-500 focus:ring-2 focus:ring-blue-300 outline-none transition-all"
+          >
+            <option value="name">Sort by Name</option>
+            <option value="date">Sort by Date</option>
+            <option value="size">Sort by Size</option>
+          </select>
+        </div>
+
+        <div className="flex flex-wrap gap-4">
           <button
             onClick={() => setIsModalOpen(true)}
-            className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-all"
+            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl shadow-md transition-all"
           >
             <PlusCircle size={16} /> Add Folder
           </button>
           <label
             htmlFor="file-upload"
-            className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-md cursor-pointer hover:bg-green-700 transition-all"
+            className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-xl shadow-md cursor-pointer transition-all"
           >
             <UploadCloud size={16} /> Upload File
           </label>
@@ -215,15 +233,6 @@ export default function Dashboard({ authToken, setPage }) {
             onChange={uploadFile}
             className="hidden"
           />
-          <select
-            value={sortOption}
-            onChange={(e) => setSortOption(e.target.value)}
-            className="p-2 border border-gray-300 rounded-md focus:border-gray-400 outline-none"
-          >
-            <option value="name">Sort by Name</option>
-            <option value="date">Sort by Date</option>
-            <option value="size">Sort by Size</option>
-          </select>
         </div>
       </div>
 
@@ -236,19 +245,21 @@ export default function Dashboard({ authToken, setPage }) {
             >
               <ChevronLeft size={20} />
             </button>
-            <span className="text-sm text-gray-600">
+            <div className="flex flex-wrap items-center gap-1 text-sm text-gray-600">
               {currentPath.split("/").map((segment, index) => (
-                <span key={index}>
+                <div key={index} className="flex items-center gap-1">
                   <span
                     onClick={() => navigateToPathSegment(index)}
-                    className="cursor-pointer hover:text-blue-600"
+                    className="cursor-pointer text-blue-600 hover:underline"
                   >
                     {segment}
                   </span>
-                  {index < currentPath.split("/").length - 1 && "/"}
-                </span>
+                  {index < currentPath.split("/").length - 1 && (
+                    <span className="text-gray-400">/</span>
+                  )}
+                </div>
               ))}
-            </span>
+            </div>
           </div>
         )}
       </div>
@@ -258,7 +269,7 @@ export default function Dashboard({ authToken, setPage }) {
           sortedFiles.map((item) => (
             <div
               key={item.name}
-              className="bg-white p-4 rounded-md shadow-sm flex flex-col items-center justify-center"
+              className="bg-white p-4 rounded-2xl shadow-md hover:shadow-lg transition-shadow duration-200 flex flex-col items-center justify-center border border-gray-100"
             >
               <div
                 onClick={() =>
@@ -272,17 +283,19 @@ export default function Dashboard({ authToken, setPage }) {
                   <File size={40} className="text-green-500" />
                 )}
               </div>
-              <span className="text-sm font-medium">{item.name}</span>
+              <span className="text-sm font-medium text-center break-words">
+                {item.name}
+              </span>
               <div className="mt-2 flex gap-2">
                 <button
                   onClick={() => renameItem(item.name)}
-                  className="bg-blue-600 text-white px-2 py-1 rounded-md text-xs"
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-full text-xs transition-all"
                 >
                   Rename
                 </button>
                 <button
                   onClick={() => deleteItem(item.name)}
-                  className="bg-red-600 text-white px-2 py-1 rounded-md text-xs"
+                  className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-full text-xs transition-all"
                 >
                   Delete
                 </button>
@@ -290,15 +303,74 @@ export default function Dashboard({ authToken, setPage }) {
             </div>
           ))
         ) : (
-          <p className="text-center text-gray-600">No items found</p>
+          <p className="text-center text-gray-400 italic mt-10">
+            No files or folders found in this directory.
+          </p>
         )}
       </div>
 
-      <ModelComponent
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onCreate={addFolder}
-      />
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white p-6 rounded-2xl shadow-lg w-full max-w-md">
+            <h2 className="text-xl font-bold mb-4">Create New Folder</h2>
+
+            <div className="mb-4">
+              <label className="block mb-1 text-sm font-medium">Year</label>
+              <input
+                type="text"
+                placeholder="e.g. 2025"
+                className="w-full p-2 border border-gray-300 rounded-lg"
+                value={year}
+                onChange={(e) => setYear(e.target.value)}
+              />
+            </div>
+
+            <div className="mb-4">
+              <label className="block mb-1 text-sm font-medium">Company Code</label>
+              <input
+                type="text"
+                placeholder="e.g. ABC123"
+                className="w-full p-2 border border-gray-300 rounded-lg"
+                value={companyCode}
+                onChange={(e) => setCompanyCode(e.target.value)}
+              />
+            </div>
+
+            <div className="mb-4">
+              <label className="block mb-1 text-sm font-medium">Assembly Code</label>
+              <input
+                type="text"
+                placeholder="e.g. ASM01"
+                className="w-full p-2 border border-gray-300 rounded-lg"
+                value={assemblyCode}
+                onChange={(e) => setAssemblyCode(e.target.value)}
+              />
+            </div>
+
+            <div className="flex justify-end gap-3">
+              <button
+                className="px-4 py-2 rounded-lg bg-gray-300 hover:bg-gray-400"
+                onClick={() => setIsModalOpen(false)}
+              >
+                Cancel
+              </button>
+              <button
+                className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700"
+                onClick={() => {
+                  addFolder(year, companyCode, assemblyCode);
+                  setIsModalOpen(false);
+                  setYear("");
+                  setCompanyCode("");
+                  setAssemblyCode("");
+                }}
+              >
+                Create
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <RenameModal
         isOpen={isRenameModalOpen}
         onClose={() => setIsRenameModalOpen(false)}
@@ -308,4 +380,3 @@ export default function Dashboard({ authToken, setPage }) {
     </div>
   );
 }
-
