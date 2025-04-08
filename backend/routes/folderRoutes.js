@@ -59,8 +59,8 @@ router.post("/create-folder", (req, res) => {
   try {
     fs.mkdirSync(fullPath, { recursive: true });
     if (!currentPath) {
-      fs.mkdirSync(path.join(fullPath, "2D"));
-      fs.mkdirSync(path.join(fullPath, "3D"));
+      fs.mkdirSync(path.join(fullPath, "2D-Drawing"));
+      fs.mkdirSync(path.join(fullPath, "3D-Model"));
     }
     res.json({ message: "Folder created successfully!", folderName: finalFolderName });
   } catch (error) {
