@@ -7,6 +7,7 @@ import {
   UploadCloud,
 } from "lucide-react";
 import RenameModal from "../components/RenameModal";
+import ModelComponent from "../components/ModelComponent";
 import Header from "../components/header";
 
 export default function Dashboard({ authToken, setPage }) {
@@ -18,9 +19,6 @@ export default function Dashboard({ authToken, setPage }) {
   const [isRenameModalOpen, setIsRenameModalOpen] = useState(false);
   const [itemToRename, setItemToRename] = useState(null);
   const [sortOption, setSortOption] = useState("name");
-  const [year, setYear] = useState("");
-  const [companyCode, setCompanyCode] = useState("");
-  const [assemblyCode, setAssemblyCode] = useState("");
 
   useEffect(() => {
     fetchFiles();
@@ -164,9 +162,14 @@ export default function Dashboard({ authToken, setPage }) {
     }
   };
 
-  const filteredFiles = files.filter((item) =>
-    item.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredFiles = files.filter((item) => {
+    const query = searchQuery.toLowerCase();
+    return (
+      item.name.toLowerCase().includes(query) ||
+      item.type.toLowerCase().includes(query) ||
+      (item.date && item.date.toLowerCase().includes(query))
+    );
+  });
 
   const sortedFiles = sortFiles(filteredFiles);
 
@@ -309,68 +312,11 @@ export default function Dashboard({ authToken, setPage }) {
         )}
       </div>
 
-      {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white p-6 rounded-2xl shadow-lg w-full max-w-md">
-            <h2 className="text-xl font-bold mb-4">Create New Folder</h2>
-
-            <div className="mb-4">
-              <label className="block mb-1 text-sm font-medium">Year</label>
-              <input
-                type="text"
-                placeholder="e.g. 2025"
-                className="w-full p-2 border border-gray-300 rounded-lg"
-                value={year}
-                onChange={(e) => setYear(e.target.value)}
-              />
-            </div>
-
-            <div className="mb-4">
-              <label className="block mb-1 text-sm font-medium">Company Code</label>
-              <input
-                type="text"
-                placeholder="e.g. ABC123"
-                className="w-full p-2 border border-gray-300 rounded-lg"
-                value={companyCode}
-                onChange={(e) => setCompanyCode(e.target.value)}
-              />
-            </div>
-
-            <div className="mb-4">
-              <label className="block mb-1 text-sm font-medium">Assembly Code</label>
-              <input
-                type="text"
-                placeholder="e.g. ASM01"
-                className="w-full p-2 border border-gray-300 rounded-lg"
-                value={assemblyCode}
-                onChange={(e) => setAssemblyCode(e.target.value)}
-              />
-            </div>
-
-            <div className="flex justify-end gap-3">
-              <button
-                className="px-4 py-2 rounded-lg bg-gray-300 hover:bg-gray-400"
-                onClick={() => setIsModalOpen(false)}
-              >
-                Cancel
-              </button>
-              <button
-                className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700"
-                onClick={() => {
-                  addFolder(year, companyCode, assemblyCode);
-                  setIsModalOpen(false);
-                  setYear("");
-                  setCompanyCode("");
-                  setAssemblyCode("");
-                }}
-              >
-                Create
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
+      <ModelComponent
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onCreate={addFolder}
+      />
       <RenameModal
         isOpen={isRenameModalOpen}
         onClose={() => setIsRenameModalOpen(false)}
@@ -379,4 +325,4 @@ export default function Dashboard({ authToken, setPage }) {
       />
     </div>
   );
-}
+}cd 
