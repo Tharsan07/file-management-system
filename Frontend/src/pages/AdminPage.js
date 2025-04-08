@@ -116,13 +116,13 @@ export default function AdminPage({ setPage }) {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 text-gray-800">
+    <div className="min-h-screen bg-gray-50 text-gray-800">
       <Header />
-      <div className="p-4 flex justify-between items-center bg-white border-b border-gray-200 shadow-sm">
-        <h1 className="text-lg font-bold">Admin Panel</h1>
+      <div className="p-4 flex justify-between items-center bg-white border-b border-gray-200 shadow">
+        <h1 className="text-xl font-semibold">Admin Panel</h1>
         <button
           onClick={() => setPage("dashboard")}
-          className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
+          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
         >
           ← Back to Dashboard
         </button>
@@ -130,7 +130,7 @@ export default function AdminPage({ setPage }) {
 
       <div className="px-4 py-6 grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Company Section */}
-        <div className="bg-white p-6 rounded-md shadow-sm">
+        <div className="bg-white p-6 rounded-2xl shadow-md">
           <h2 className="text-xl font-bold mb-4">Manage Companies</h2>
           <div className="flex gap-4 mb-4">
             <input
@@ -138,27 +138,27 @@ export default function AdminPage({ setPage }) {
               placeholder="Company Name"
               value={companyName}
               onChange={(e) => setCompanyName(e.target.value)}
-              className="w-full p-2 border border-gray-300 rounded-md"
+              className="w-full p-3 border border-gray-300 rounded-xl"
             />
             <input
               type="text"
               placeholder="Company Code"
               value={companyCode}
               onChange={(e) => setCompanyCode(e.target.value)}
-              className="w-full p-2 border border-gray-300 rounded-md"
+              className="w-full p-3 border border-gray-300 rounded-xl"
             />
             <button
               onClick={addCompany}
-              className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700"
+              className="bg-green-600 text-white px-4 py-2 rounded-xl hover:bg-green-700 transition"
             >
-              <PlusCircle size={16} className="inline-block" /> Add
+              <PlusCircle size={16} className="inline-block mr-1" /> Add
             </button>
           </div>
           <ul className="space-y-2">
             {companies.map((c) => (
               <li
                 key={c.code}
-                className="flex justify-between items-center p-2 border border-gray-200 rounded-md"
+                className="flex justify-between items-center p-3 border border-gray-200 rounded-xl bg-gray-50"
               >
                 {editingCompany?.oldCode === c.code ? (
                   <div className="flex gap-2 w-full">
@@ -167,16 +167,16 @@ export default function AdminPage({ setPage }) {
                       onChange={(e) =>
                         setEditingCompany({ ...editingCompany, name: e.target.value })
                       }
-                      className="w-full p-1 border border-gray-300 rounded-md"
+                      className="w-full p-2 border border-gray-300 rounded-lg"
                     />
                     <input
                       value={editingCompany.code}
                       onChange={(e) =>
                         setEditingCompany({ ...editingCompany, code: e.target.value })
                       }
-                      className="w-full p-1 border border-gray-300 rounded-md"
+                      className="w-full p-2 border border-gray-300 rounded-lg"
                     />
-                    <button onClick={editCompany} className="bg-blue-500 text-white px-2 rounded-md">
+                    <button onClick={editCompany} className="bg-blue-500 text-white px-3 rounded-lg">
                       Save
                     </button>
                   </div>
@@ -186,13 +186,13 @@ export default function AdminPage({ setPage }) {
                     <div className="flex gap-2">
                       <button
                         onClick={() => setEditingCompany({ oldCode: c.code, name: c.name, code: c.code })}
-                        className="bg-yellow-500 text-white px-2 py-1 rounded-md hover:bg-yellow-600"
+                        className="bg-yellow-500 text-white px-3 py-1 rounded-lg hover:bg-yellow-600"
                       >
                         <Pencil size={16} />
                       </button>
                       <button
                         onClick={() => deleteCompany(c.code)}
-                        className="bg-red-600 text-white px-2 py-1 rounded-md hover:bg-red-700"
+                        className="bg-red-600 text-white px-3 py-1 rounded-lg hover:bg-red-700"
                       >
                         <Trash2 size={16} />
                       </button>
@@ -205,7 +205,7 @@ export default function AdminPage({ setPage }) {
         </div>
 
         {/* Assembly Section */}
-        <div className="bg-white p-6 rounded-md shadow-sm">
+        <div className="bg-white p-6 rounded-2xl shadow-md">
           <h2 className="text-xl font-bold mb-4">Manage Assemblies</h2>
           <div className="flex gap-4 mb-4">
             <input
@@ -213,27 +213,27 @@ export default function AdminPage({ setPage }) {
               placeholder="Assembly Name"
               value={assemblyName}
               onChange={(e) => setAssemblyName(e.target.value)}
-              className="w-full p-2 border border-gray-300 rounded-md"
+              className="w-full p-3 border border-gray-300 rounded-xl"
             />
             <input
               type="text"
               placeholder="Assembly Code"
               value={assemblyCode}
               onChange={(e) => setAssemblyCode(e.target.value)}
-              className="w-full p-2 border border-gray-300 rounded-md"
+              className="w-full p-3 border border-gray-300 rounded-xl"
             />
             <button
               onClick={addAssembly}
-              className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700"
+              className="bg-green-600 text-white px-4 py-2 rounded-xl hover:bg-green-700 transition"
             >
-              <PlusCircle size={16} className="inline-block" /> Add
+              <PlusCircle size={16} className="inline-block mr-1" /> Add
             </button>
           </div>
           <ul className="space-y-2">
             {assemblyCodes.map((a) => (
               <li
                 key={a.code}
-                className="flex justify-between items-center p-2 border border-gray-200 rounded-md"
+                className="flex justify-between items-center p-3 border border-gray-200 rounded-xl bg-gray-50"
               >
                 {editingAssembly?.oldCode === a.code ? (
                   <div className="flex gap-2 w-full">
@@ -242,16 +242,16 @@ export default function AdminPage({ setPage }) {
                       onChange={(e) =>
                         setEditingAssembly({ ...editingAssembly, name: e.target.value })
                       }
-                      className="w-full p-1 border border-gray-300 rounded-md"
+                      className="w-full p-2 border border-gray-300 rounded-lg"
                     />
                     <input
                       value={editingAssembly.code}
                       onChange={(e) =>
                         setEditingAssembly({ ...editingAssembly, code: e.target.value })
                       }
-                      className="w-full p-1 border border-gray-300 rounded-md"
+                      className="w-full p-2 border border-gray-300 rounded-lg"
                     />
-                    <button onClick={editAssembly} className="bg-blue-500 text-white px-2 rounded-md">
+                    <button onClick={editAssembly} className="bg-blue-500 text-white px-3 rounded-lg">
                       Save
                     </button>
                   </div>
@@ -261,13 +261,13 @@ export default function AdminPage({ setPage }) {
                     <div className="flex gap-2">
                       <button
                         onClick={() => setEditingAssembly({ oldCode: a.code, name: a.name, code: a.code })}
-                        className="bg-yellow-500 text-white px-2 py-1 rounded-md hover:bg-yellow-600"
+                        className="bg-yellow-500 text-white px-3 py-1 rounded-lg hover:bg-yellow-600"
                       >
                         <Pencil size={16} />
                       </button>
                       <button
                         onClick={() => deleteAssembly(a.code)}
-                        className="bg-red-600 text-white px-2 py-1 rounded-md hover:bg-red-700"
+                        className="bg-red-600 text-white px-3 py-1 rounded-lg hover:bg-red-700"
                       >
                         <Trash2 size={16} />
                       </button>
