@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   Folder,
   File,
@@ -13,29 +13,13 @@ import Header from "../components/header";
 export default function Dashboard({ authToken, setPage }) {
   const [files, setFiles] = useState([]);
   const [currentPath, setCurrentPath] = useState("");
-  const [error, setError] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isRenameModalOpen, setIsRenameModalOpen] = useState(false);
   const [itemToRename, setItemToRename] = useState(null);
-  const [yearFilter, setYearFilter] = useState("");
-  const [companyCodeFilter, setCompanyCodeFilter] = useState("");
-  const [assemblyCodeFilter, setAssemblyCodeFilter] = useState("");
-  const [companies, setCompanies] = useState([]);
-  const [assemblyCodes, setAssemblyCodes] = useState([]);
+  const [sortOption, setSortOption] = useState("name");
 
-  useEffect(() => {
-    fetchFiles();
-    fetchCompanies();
-    fetchAssemblyCodes();
-  }, [currentPath]);
-
-  const logout = () => {
-    localStorage.removeItem("authToken");
-    setPage("login");
-  };
-
-  const fetchFiles = async () => {
+  const fetchFiles = useCallback(async () => {
     try {
       const response = await fetch(
         `http://localhost:5000/api/folder/list?path=${encodeURIComponent(
@@ -45,32 +29,19 @@ export default function Dashboard({ authToken, setPage }) {
       const data = await response.json();
       if (response.ok) {
         setFiles(data);
-      } else {
-        setError("Failed to load files.");
       }
     } catch (err) {
-      setError("Error fetching files.");
+      console.error("Error fetching files:", err);
     }
-  };
+  }, [currentPath]);
 
-  const fetchCompanies = async () => {
-    try {
-      const response = await fetch("http://localhost:5000/api/admin/company-codes");
-      const data = await response.json();
-      setCompanies(data.codes || []);
-    } catch (err) {
-      console.error("Error fetching companies:", err);
-    }
-  };
+  useEffect(() => {
+    fetchFiles();
+  }, [fetchFiles]);
 
-  const fetchAssemblyCodes = async () => {
-    try {
-      const response = await fetch("http://localhost:5000/api/admin/assembly-codes");
-      const data = await response.json();
-      setAssemblyCodes(data.codes || []);
-    } catch (err) {
-      console.error("Error fetching assembly codes:", err);
-    }
+  const logout = () => {
+    localStorage.removeItem("authToken");
+    setPage("login");
   };
 
   const addFolder = async (year, companyCode, assemblyCode) => {
@@ -175,16 +146,29 @@ export default function Dashboard({ authToken, setPage }) {
     setCurrentPath(newPath);
   };
 
+  const sortFiles = (files) => {
+    switch (sortOption) {
+      case "name":
+        return files.sort((a, b) => a.name.localeCompare(b.name));
+      case "date":
+        return files.sort((a, b) => new Date(b.date) - new Date(a.date));
+      case "size":
+        return files.sort((a, b) => b.size - a.size);
+      default:
+        return files;
+    }
+  };
+
   const filteredFiles = files.filter((item) => {
-    const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesYear = !yearFilter || item.name.includes(yearFilter);
-    const matchesCompanyCode = !companyCodeFilter || item.name.includes(companyCodeFilter);
-    const matchesAssemblyCode = !assemblyCodeFilter || item.name.includes(assemblyCodeFilter);
-    return matchesSearch && matchesYear && matchesCompanyCode && matchesAssemblyCode;
+    const query = searchQuery.toLowerCase();
+    return (
+      item.name.toLowerCase().includes(query) ||
+      item.type.toLowerCase().includes(query) ||
+      (item.date && item.date.toLowerCase().includes(query))
+    );
   });
 
-  const currentYear = new Date().getFullYear();
-  const years = Array.from({ length: 10 }, (_, i) => currentYear - i);
+  const sortedFiles = sortFiles(filteredFiles);
 
   return (
     <div className="min-h-screen bg-gray-100 text-gray-800">
@@ -219,44 +203,15 @@ export default function Dashboard({ authToken, setPage }) {
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full md:w-96 p-3 border border-gray-300 rounded-xl shadow-inner focus:border-gray-500 focus:ring-2 focus:ring-blue-300 outline-none transition-all"
           />
-          <div className="flex gap-2">
-            <select
-              value={yearFilter}
-              onChange={(e) => setYearFilter(e.target.value)}
-              className="p-3 border border-gray-300 rounded-xl shadow-inner focus:border-gray-500 focus:ring-2 focus:ring-blue-300 outline-none transition-all"
-            >
-              <option value="">Filter by Year</option>
-              {years.map((yearOption) => (
-                <option key={yearOption} value={yearOption}>
-                  {yearOption}
-                </option>
-              ))}
-            </select>
-            <select
-              value={companyCodeFilter}
-              onChange={(e) => setCompanyCodeFilter(e.target.value)}
-              className="p-3 border border-gray-300 rounded-xl shadow-inner focus:border-gray-500 focus:ring-2 focus:ring-blue-300 outline-none transition-all"
-            >
-              <option value="">Filter by Company Code</option>
-              {companies.map((company) => (
-                <option key={company.code} value={company.code}>
-                  {company.code}
-                </option>
-              ))}
-            </select>
-            <select
-              value={assemblyCodeFilter}
-              onChange={(e) => setAssemblyCodeFilter(e.target.value)}
-              className="p-3 border border-gray-300 rounded-xl shadow-inner focus:border-gray-500 focus:ring-2 focus:ring-blue-300 outline-none transition-all"
-            >
-              <option value="">Filter by Assembly Code</option>
-              {assemblyCodes.map((assembly) => (
-                <option key={assembly.code} value={assembly.code}>
-                  {assembly.code}
-                </option>
-              ))}
-            </select>
-          </div>
+          <select
+            value={sortOption}
+            onChange={(e) => setSortOption(e.target.value)}
+            className="p-3 border border-gray-300 rounded-xl shadow-inner focus:border-gray-500 focus:ring-2 focus:ring-blue-300 outline-none transition-all"
+          >
+            <option value="name">Sort by Name</option>
+            <option value="date">Sort by Date</option>
+            <option value="size">Sort by Size</option>
+          </select>
         </div>
 
         <div className="flex flex-wrap gap-4">
@@ -310,11 +265,13 @@ export default function Dashboard({ authToken, setPage }) {
       </div>
 
       <div className="px-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filteredFiles.length > 0 ? (
-          filteredFiles.map((item) => (
+        {sortedFiles.length > 0 ? (
+          sortedFiles.map((item) => (
             <div
               key={item.name}
-              className="bg-white p-4 rounded-2xl shadow-md hover:shadow-lg transition-shadow duration-200 flex flex-col items-center justify-center border border-gray-100"
+              className={`bg-white p-4 rounded-2xl shadow-md hover:shadow-lg transition-shadow duration-200 flex flex-col items-center justify-center border border-gray-100 hover:bg-gray-50 hover:scale-105 ${
+                item.type === "folder" ? "hover:border-blue-500" : ""
+              }`}
             >
               <div
                 onClick={() =>
