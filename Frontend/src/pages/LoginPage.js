@@ -57,7 +57,7 @@ export default function LoginPage({ setPage, setAuthToken }) {
       {/* Login Form Section */}
       <div className="flex flex-col items-center justify-center min-h-[calc(100vh-80px)] px-4">
         <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md transition-all">
-          <h2 className="text-3xl font-bold text-center text-gray-800 mb-6">Welcome Back</h2>
+          <h2 className="text-3xl font-bold text-center text-gray-800 mb-6">Login</h2>
 
           {error && <p className="text-red-500 text-center mb-4">{error}</p>}
 

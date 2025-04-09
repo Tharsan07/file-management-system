@@ -44,7 +44,7 @@ export default function Dashboard({ authToken, setPage }) {
       );
       const data = await response.json();
       if (response.ok) {
-        setFiles(data);
+        setFiles(data); // Already sorted by backend
       } else {
         setError("Failed to load files.");
       }
@@ -175,13 +175,15 @@ export default function Dashboard({ authToken, setPage }) {
     setCurrentPath(newPath);
   };
 
-  const filteredFiles = files.filter((item) => {
+  const filteredFiles = files
+  .filter((item) => {
     const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesYear = !yearFilter || item.name.includes(yearFilter);
     const matchesCompanyCode = !companyCodeFilter || item.name.includes(companyCodeFilter);
     const matchesAssemblyCode = !assemblyCodeFilter || item.name.includes(assemblyCodeFilter);
     return matchesSearch && matchesYear && matchesCompanyCode && matchesAssemblyCode;
-  });
+  })
+  .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)); // Sort by date descending
 
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: 10 }, (_, i) => currentYear - i);
@@ -317,6 +319,7 @@ export default function Dashboard({ authToken, setPage }) {
               className="bg-white p-4 rounded-2xl shadow-md hover:shadow-lg transition-shadow duration-200 flex flex-col items-center justify-center border border-gray-100"
             >
               <div
+                title={`Created: ${new Date(item.createdAt).toLocaleString()}`}
                 onClick={() =>
                   item.type === "folder" && navigateToFolder(item.name)
                 }
@@ -330,6 +333,9 @@ export default function Dashboard({ authToken, setPage }) {
               </div>
               <span className="text-sm font-medium text-center break-words">
                 {item.name}
+              </span>
+              <span className="text-xs text-gray-500">
+                {new Date(item.createdAt).toLocaleString()}
               </span>
               <div className="mt-2 flex gap-2">
                 <button

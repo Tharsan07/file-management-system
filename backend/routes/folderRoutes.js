@@ -24,15 +24,32 @@ router.get("/list", (req, res) => {
   }
 
   try {
-    const items = fs.readdirSync(fullPath).map((name) => ({
-      name,
-      type: fs.statSync(path.join(fullPath, name)).isDirectory() ? "folder" : "file",
-    }));
-    res.json(items);
+    const items = fs.readdirSync(fullPath).map((name) => {
+      const fullItemPath = path.join(fullPath, name);
+      const stats = fs.statSync(fullItemPath);
+
+      return {
+        name,
+        type: stats.isDirectory() ? "folder" : "file",
+        createdAt: stats.birthtime, // Get file creation time
+      };
+    });
+
+    // ✅ Sort by createdAt (newest first)
+    const sortedItems = items.sort(
+      (a, b) => new Date(a.createdAt) - new Date(b.createdAt)
+    );
+    
+
+    res.json(sortedItems);
   } catch (error) {
-    res.status(500).json({ message: "Error reading directory.", error: error.toString() });
+    res.status(500).json({
+      message: "Error reading directory.",
+      error: error.toString(),
+    });
   }
 });
+
 
 // Create folder
 router.post("/create-folder", (req, res) => {
