@@ -24,14 +24,29 @@ export default function Dashboard({ authToken, setPage }) {
   const [companies, setCompanies] = useState([]);
   const [assemblyCodes, setAssemblyCodes] = useState([]);
 
+  // Initialize from localStorage on mount
   useEffect(() => {
-    fetchFiles();
+    const storedPath = localStorage.getItem("currentPath");
+    if (storedPath) {
+      setCurrentPath(storedPath);
+    } else {
+      fetchFiles();
+    }
     fetchCompanies();
     fetchAssemblyCodes();
+  }, []);
+
+  // Persist currentPath and refetch files when it changes
+  useEffect(() => {
+    if (currentPath !== undefined) {
+      localStorage.setItem("currentPath", currentPath);
+      fetchFiles();
+    }
   }, [currentPath]);
 
   const logout = () => {
     localStorage.removeItem("authToken");
+    localStorage.removeItem("currentPath"); // optional: clear path on logout
     setPage("login");
   };
 

@@ -17,7 +17,15 @@ export default function AdminPage({ setPage }) {
   useEffect(() => {
     fetchCompanies();
     fetchAssemblyCodes();
+    localStorage.setItem("currentPage", "admin");
   }, []);
+
+  useEffect(() => {
+    const savedPage = localStorage.getItem("currentPage");
+    if (savedPage === "admin") {
+      setPage("admin");
+    }
+  }, [setPage]);
 
   const fetchCompanies = async () => {
     try {
@@ -121,7 +129,10 @@ export default function AdminPage({ setPage }) {
       <div className="p-4 flex justify-between items-center bg-white border-b border-gray-200 shadow">
         <h1 className="text-xl font-semibold">Admin Panel</h1>
         <button
-          onClick={() => setPage("dashboard")}
+          onClick={() => {
+            localStorage.setItem("currentPage", "dashboard");
+            setPage("dashboard");
+          }}
           className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
         >
           ← Back to Dashboard
@@ -129,7 +140,6 @@ export default function AdminPage({ setPage }) {
       </div>
 
       <div className="px-4 py-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Company Section */}
         <div className="bg-white p-6 rounded-2xl shadow-md">
           <h2 className="text-xl font-bold mb-4">Manage Companies</h2>
           <div className="flex gap-4 mb-4">
@@ -204,7 +214,6 @@ export default function AdminPage({ setPage }) {
           </ul>
         </div>
 
-        {/* Assembly Section */}
         <div className="bg-white p-6 rounded-2xl shadow-md">
           <h2 className="text-xl font-bold mb-4">Manage Assemblies</h2>
           <div className="flex gap-4 mb-4">

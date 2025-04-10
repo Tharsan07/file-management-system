@@ -1,40 +1,58 @@
 // src/App.js
-import { useState, useEffect } from "react";
-import LoginPage from "./pages/LoginPage";
+import React, { useState, useEffect } from "react";
 import Dashboard from "./pages/Dashboard";
+import Login from "./pages/LoginPage";
 import CreateOptions from "./components/CreateOptions";
 import ProjectView from "./components/ProjectView";
-import AdminPage from "./pages/AdminPage"
+import AdminPage from "./pages/AdminPage";
 
-export default function App() {
-  const [page, setPage] = useState("login");
-  const [authToken, setAuthToken] = useState(null);
+function App() {
+  const [authToken, setAuthToken] = useState(() => localStorage.getItem("authToken"));
+  const [page, setPage] = useState(() => {
+    const savedPage = localStorage.getItem("currentPage");
+    return authToken ? savedPage || "dashboard" : "login";
+  });
 
-  // On mount, check if token exists in localStorage
+  // Save authToken to localStorage and redirect to dashboard on login
   useEffect(() => {
-    const token = localStorage.getItem("authToken");
-    if (token) {
-      setAuthToken(token);
-      setPage("dashboard");
+    if (authToken) {
+      localStorage.setItem("authToken", authToken);
+      // Don't overwrite page if it's already set (e.g., "admin")
+      if (!localStorage.getItem("currentPage")) {
+        setPage("dashboard");
+      }
+    } else {
+      localStorage.removeItem("authToken");
+      setPage("login");
     }
-  }, []);
+  }, [authToken]);
+
+  // Sync current page to localStorage
+  useEffect(() => {
+    if (page) {
+      localStorage.setItem("currentPage", page);
+    }
+  }, [page]);
 
   return (
-    <div >
-      <div >
-        {page === "login" && (
-          <LoginPage setPage={setPage} setAuthToken={setAuthToken} />
-        )}
-        {page === "dashboard" && (
-          <Dashboard setPage={setPage} authToken={authToken} />
-        )}
-        {page === "createOptions" && <CreateOptions setPage={setPage} />}
-        {page === "projectView" && (
-          <ProjectView setPage={setPage} authToken={authToken} />
-        )}
-        {page === "admin" && <AdminPage setPage={setPage} />}
-
-      </div>
+    <div>
+      {page === "login" && (
+        <Login setAuthToken={setAuthToken} setPage={setPage} />
+      )}
+      {page === "dashboard" && (
+        <Dashboard authToken={authToken} setPage={setPage} />
+      )}
+      {page === "createOptions" && (
+        <CreateOptions setPage={setPage} />
+      )}
+      {page === "projectView" && (
+        <ProjectView setPage={setPage} authToken={authToken} />
+      )}
+      {page === "admin" && (
+        <AdminPage setPage={setPage} />
+      )}
     </div>
   );
 }
+
+export default App;
