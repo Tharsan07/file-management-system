@@ -38,13 +38,11 @@ export default function Dashboard({ authToken, setPage }) {
   const fetchFiles = async () => {
     try {
       const response = await fetch(
-        `http://localhost:5000/api/folder/list?path=${encodeURIComponent(
-          currentPath
-        )}`
+        `http://localhost:5000/api/folder/list?path=${encodeURIComponent(currentPath)}`
       );
       const data = await response.json();
       if (response.ok) {
-        setFiles(data); // Already sorted by backend
+        setFiles(data);
       } else {
         setError("Failed to load files.");
       }
@@ -80,19 +78,14 @@ export default function Dashboard({ authToken, setPage }) {
         : year;
 
     try {
-      const response = await fetch(
-        "http://localhost:5000/api/folder/create-folder",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ folderName, path: currentPath }),
-        }
-      );
+      const response = await fetch("http://localhost:5000/api/folder/create-folder", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ folderName, path: currentPath }),
+      });
 
       if (response.ok) {
-        const data = await response.json();
-        fetchFiles();
-        console.log("Folder created:", data.folderName);
+        await fetchFiles();
       } else {
         const data = await response.json();
         alert(`Folder creation failed: ${data.message}`);
@@ -110,6 +103,7 @@ export default function Dashboard({ authToken, setPage }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, path: currentPath }),
       });
+
       if (response.ok) {
         fetchFiles();
       } else {
@@ -129,6 +123,7 @@ export default function Dashboard({ authToken, setPage }) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ oldName, newName, path: currentPath }),
     });
+
     if (response.ok) {
       fetchFiles();
     } else {
@@ -139,13 +134,16 @@ export default function Dashboard({ authToken, setPage }) {
   const uploadFile = async (event) => {
     const file = event.target.files[0];
     if (!file) return;
+
     const formData = new FormData();
     formData.append("file", file);
     formData.append("path", currentPath);
+
     const response = await fetch("http://localhost:5000/api/folder/upload", {
       method: "POST",
       body: formData,
     });
+
     if (response.ok) {
       fetchFiles();
       alert("File uploaded successfully!");
@@ -176,14 +174,14 @@ export default function Dashboard({ authToken, setPage }) {
   };
 
   const filteredFiles = files
-  .filter((item) => {
-    const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesYear = !yearFilter || item.name.includes(yearFilter);
-    const matchesCompanyCode = !companyCodeFilter || item.name.includes(companyCodeFilter);
-    const matchesAssemblyCode = !assemblyCodeFilter || item.name.includes(assemblyCodeFilter);
-    return matchesSearch && matchesYear && matchesCompanyCode && matchesAssemblyCode;
-  })
-  .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)); // Sort by date descending
+    .filter((item) => {
+      const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesYear = !yearFilter || item.name.includes(yearFilter);
+      const matchesCompanyCode = !companyCodeFilter || item.name.includes(companyCodeFilter);
+      const matchesAssemblyCode = !assemblyCodeFilter || item.name.includes(assemblyCodeFilter);
+      return matchesSearch && matchesYear && matchesCompanyCode && matchesAssemblyCode;
+    })
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: 10 }, (_, i) => currentYear - i);
@@ -191,6 +189,8 @@ export default function Dashboard({ authToken, setPage }) {
   return (
     <div className="min-h-screen bg-gray-100 text-gray-800">
       <Header />
+
+      {/* Top Bar */}
       <div className="sticky top-0 z-10 bg-white border-b border-gray-200 shadow-sm">
         <div className="flex justify-between items-center p-4">
           <h1 className="text-lg font-bold">File Manager</h1>
@@ -212,6 +212,7 @@ export default function Dashboard({ authToken, setPage }) {
         </div>
       </div>
 
+      {/* Filters and Actions */}
       <div className="p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 flex-wrap">
         <div className="flex-1 flex items-center gap-4">
           <input
@@ -219,13 +220,13 @@ export default function Dashboard({ authToken, setPage }) {
             placeholder="Search files & folders"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full md:w-96 p-3 border border-gray-300 rounded-xl shadow-inner focus:border-gray-500 focus:ring-2 focus:ring-blue-300 outline-none transition-all"
+            className="w-full md:w-96 p-3 border border-gray-300 rounded-xl shadow-inner focus:ring-2 focus:ring-blue-300 transition-all"
           />
           <div className="flex gap-2">
             <select
               value={yearFilter}
               onChange={(e) => setYearFilter(e.target.value)}
-              className="p-3 border border-gray-300 rounded-xl shadow-inner focus:border-gray-500 focus:ring-2 focus:ring-blue-300 outline-none transition-all"
+              className="p-3 border border-gray-300 rounded-xl shadow-inner focus:ring-2 focus:ring-blue-300 transition-all"
             >
               <option value="">Filter by Year</option>
               {years.map((yearOption) => (
@@ -237,30 +238,31 @@ export default function Dashboard({ authToken, setPage }) {
             <select
               value={companyCodeFilter}
               onChange={(e) => setCompanyCodeFilter(e.target.value)}
-              className="p-3 border border-gray-300 rounded-xl shadow-inner focus:border-gray-500 focus:ring-2 focus:ring-blue-300 outline-none transition-all"
+              className="p-3 border border-gray-300 rounded-xl shadow-inner focus:ring-2 focus:ring-blue-300 transition-all"
             >
               <option value="">Filter by Company Code</option>
               {companies.map((company) => (
                 <option key={company.code} value={company.code}>
-                  {company.code}
+                  {company.code} - {company.name}
                 </option>
               ))}
             </select>
             <select
               value={assemblyCodeFilter}
               onChange={(e) => setAssemblyCodeFilter(e.target.value)}
-              className="p-3 border border-gray-300 rounded-xl shadow-inner focus:border-gray-500 focus:ring-2 focus:ring-blue-300 outline-none transition-all"
+              className="p-3 border border-gray-300 rounded-xl shadow-inner focus:ring-2 focus:ring-blue-300 transition-all"
             >
               <option value="">Filter by Assembly Code</option>
               {assemblyCodes.map((assembly) => (
                 <option key={assembly.code} value={assembly.code}>
-                  {assembly.code}
+                  {assembly.code} - {assembly.name}
                 </option>
               ))}
             </select>
           </div>
         </div>
 
+        {/* Action Buttons */}
         <div className="flex flex-wrap gap-4">
           <button
             onClick={() => setIsModalOpen(true)}
@@ -274,22 +276,15 @@ export default function Dashboard({ authToken, setPage }) {
           >
             <UploadCloud size={16} /> Upload File
           </label>
-          <input
-            id="file-upload"
-            type="file"
-            onChange={uploadFile}
-            className="hidden"
-          />
+          <input id="file-upload" type="file" onChange={uploadFile} className="hidden" />
         </div>
       </div>
 
+      {/* Path Breadcrumb */}
       <div className="p-4">
         {currentPath && (
           <div className="flex items-center gap-2 mb-4">
-            <button
-              onClick={goBack}
-              className="text-gray-600 hover:text-gray-800"
-            >
+            <button onClick={goBack} className="text-gray-600 hover:text-gray-800">
               <ChevronLeft size={20} />
             </button>
             <div className="flex flex-wrap items-center gap-1 text-sm text-gray-600">
@@ -311,33 +306,32 @@ export default function Dashboard({ authToken, setPage }) {
         )}
       </div>
 
-      <div className="px-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {/* File & Folder Grid */}
+      <div className="px-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredFiles.length > 0 ? (
           filteredFiles.map((item) => (
             <div
               key={item.name}
-              className="bg-white p-4 rounded-2xl shadow-md hover:shadow-lg transition-shadow duration-200 flex flex-col items-center justify-center border border-gray-100"
+              className="bg-white p-6 min-h-[180px] rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300 flex flex-col items-center justify-between border border-gray-200"
             >
               <div
                 title={`Created: ${new Date(item.createdAt).toLocaleString()}`}
-                onClick={() =>
-                  item.type === "folder" && navigateToFolder(item.name)
-                }
-                className="cursor-pointer mb-2"
+                onClick={() => item.type === "folder" && navigateToFolder(item.name)}
+                className="cursor-pointer mb-3"
               >
                 {item.type === "folder" ? (
-                  <Folder size={40} className="text-blue-500" />
+                  <Folder size={56} className="text-blue-500" />
                 ) : (
-                  <File size={40} className="text-green-500" />
+                  <File size={56} className="text-green-500" />
                 )}
               </div>
-              <span className="text-sm font-medium text-center break-words">
+              <span className="text-base font-semibold text-center break-words">
                 {item.name}
               </span>
               <span className="text-xs text-gray-500">
                 {new Date(item.createdAt).toLocaleString()}
               </span>
-              <div className="mt-2 flex gap-2">
+              <div className="mt-3 flex gap-2">
                 <button
                   onClick={() => renameItem(item.name)}
                   className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-full text-xs transition-all"
@@ -360,6 +354,7 @@ export default function Dashboard({ authToken, setPage }) {
         )}
       </div>
 
+      {/* Modals */}
       <ModelComponent
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}

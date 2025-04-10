@@ -85,7 +85,7 @@ const RenameModal = ({ isOpen, onClose, onRename, oldName }) => {
           <option value="" disabled>Select Company Code</option>
           {companies.map((company) => (
             <option key={company.code} value={company.code}>
-              {company.code}
+              {company.code} - {company.name}
             </option>
           ))}
         </select>
@@ -98,7 +98,7 @@ const RenameModal = ({ isOpen, onClose, onRename, oldName }) => {
           <option value="" disabled>Select Assembly Code</option>
           {assemblyCodes.map((assembly) => (
             <option key={assembly.code} value={assembly.code}>
-              {assembly.code}
+              {assembly.code} - {assembly.name}
             </option>
           ))}
         </select>
