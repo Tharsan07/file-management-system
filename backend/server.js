@@ -14,10 +14,11 @@ app.use(cors());
 const authRoutes = require("./routes/auth");
 const folderRoutes = require("./routes/folderRoutes");
 const adminRoutes = require("./routes/adminRoutes");
-
+// backend/server.js
 app.use("/api/auth", authRoutes);
 app.use("/api/folder", folderRoutes);
 app.use("/api/admin", adminRoutes);
+
 
 // Start server
 app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));

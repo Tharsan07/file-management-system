@@ -15,6 +15,7 @@ export default function Dashboard({ authToken, setPage }) {
   const [currentPath, setCurrentPath] = useState("");
   const [error, setError] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isRenameModalOpen, setIsRenameModalOpen] = useState(false);
   const [itemToRename, setItemToRename] = useState(null);
@@ -23,6 +24,7 @@ export default function Dashboard({ authToken, setPage }) {
   const [assemblyCodeFilter, setAssemblyCodeFilter] = useState("");
   const [companies, setCompanies] = useState([]);
   const [assemblyCodes, setAssemblyCodes] = useState([]);
+  const [isSearching, setIsSearching] = useState(false);
 
   // Initialize from localStorage on mount
   useEffect(() => {
@@ -43,6 +45,19 @@ export default function Dashboard({ authToken, setPage }) {
       fetchFiles();
     }
   }, [currentPath]);
+
+  // Remove the duplicate useEffect for search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (searchQuery.trim()) {
+        handleSearch();
+      } else {
+        setSearchResults([]);
+      }
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery, yearFilter, companyCodeFilter, assemblyCodeFilter]);
 
   const logout = () => {
     localStorage.removeItem("authToken");
@@ -146,6 +161,33 @@ export default function Dashboard({ authToken, setPage }) {
     }
   };
 
+  const handleSearch = async () => {
+    if (!searchQuery.trim()) {
+      setSearchResults([]);
+      return;
+    }
+
+    setIsSearching(true);
+    try {
+      const response = await fetch(
+        `http://localhost:5000/api/folder/search?query=${encodeURIComponent(searchQuery)}&year=${yearFilter}&companyCode=${companyCodeFilter}&assemblyCode=${assemblyCodeFilter}`
+      );
+      const data = await response.json();
+      if (response.ok) {
+        setSearchResults(data);
+      } else {
+        setError(data.message || "Error searching files");
+        setSearchResults([]);
+      }
+    } catch (error) {
+      console.error("Error searching files:", error);
+      setError("Error searching files");
+      setSearchResults([]);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
   const uploadFile = async (event) => {
     const file = event.target.files[0];
     if (!file) return;
@@ -167,8 +209,16 @@ export default function Dashboard({ authToken, setPage }) {
     }
   };
 
-  const navigateToFolder = (folderName) => {
-    setCurrentPath(currentPath ? `${currentPath}/${folderName}` : folderName);
+  const navigateToFolder = (folderPath) => {
+    if (searchQuery) {
+      // If we're in search mode, use the full path from search results
+      setCurrentPath(folderPath);
+      setSearchQuery(""); // Clear search when navigating
+      setSearchResults([]); // Clear search results
+    } else {
+      // If we're in normal mode, append the folder name to current path
+      setCurrentPath(currentPath ? `${currentPath}/${folderPath}` : folderPath);
+    }
   };
 
   const goBack = () => {
@@ -230,13 +280,20 @@ export default function Dashboard({ authToken, setPage }) {
       {/* Filters and Actions */}
       <div className="p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 flex-wrap">
         <div className="flex-1 flex items-center gap-4">
-          <input
-            type="text"
-            placeholder="Search files & folders"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full md:w-96 p-3 border border-gray-300 rounded-xl shadow-inner focus:ring-2 focus:ring-blue-300 transition-all"
-          />
+          <div className="relative w-full md:w-96">
+            <input
+              type="text"
+              placeholder="Search files & folders"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full p-3 border border-gray-300 rounded-xl shadow-inner focus:ring-2 focus:ring-blue-300 transition-all"
+            />
+            {isSearching && (
+              <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-500"></div>
+              </div>
+            )}
+          </div>
           <div className="flex gap-2">
             <select
               value={yearFilter}
@@ -295,25 +352,29 @@ export default function Dashboard({ authToken, setPage }) {
         </div>
       </div>
 
-      {/* Path Breadcrumb */}
-      <div className="p-4">
+      {/* Path Breadcrumb - MOVED HERE, ABOVE FOLDERS */}
+      <div className="px-4 mb-4">
         {currentPath && (
-          <div className="flex items-center gap-2 mb-4">
+          <div className="flex items-center gap-2 mb-2 p-3 bg-white rounded-xl shadow-sm">
             <button onClick={goBack} className="text-gray-600 hover:text-gray-800">
               <ChevronLeft size={20} />
             </button>
             <div className="flex flex-wrap items-center gap-1 text-sm text-gray-600">
+              <span 
+                onClick={() => setCurrentPath("")}
+                className="cursor-pointer text-blue-600 hover:underline"
+              >
+                Home
+              </span>
               {currentPath.split("/").map((segment, index) => (
                 <div key={index} className="flex items-center gap-1">
+                  <span className="text-gray-400">/</span>
                   <span
                     onClick={() => navigateToPathSegment(index)}
                     className="cursor-pointer text-blue-600 hover:underline"
                   >
                     {segment}
                   </span>
-                  {index < currentPath.split("/").length - 1 && (
-                    <span className="text-gray-400">/</span>
-                  )}
                 </div>
               ))}
             </div>
@@ -321,51 +382,103 @@ export default function Dashboard({ authToken, setPage }) {
         )}
       </div>
 
-      {/* File & Folder Grid */}
+      {/* Search Results or Current Directory */}
       <div className="px-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredFiles.length > 0 ? (
-          filteredFiles.map((item) => (
-            <div
-              key={item.name}
-              className="bg-white p-6 min-h-[180px] rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300 flex flex-col items-center justify-between border border-gray-200"
-            >
+        {searchQuery ? (
+          searchResults.length > 0 ? (
+            searchResults.map((item) => (
               <div
-                title={`Created: ${new Date(item.createdAt).toLocaleString()}`}
-                onClick={() => item.type === "folder" && navigateToFolder(item.name)}
-                className="cursor-pointer mb-3"
+                key={item.path}
+                className="bg-white p-6 min-h-[180px] rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300 flex flex-col items-center justify-between border border-gray-200"
               >
-                {item.type === "folder" ? (
-                  <Folder size={56} className="text-blue-500" />
-                ) : (
-                  <File size={56} className="text-green-500" />
-                )}
-              </div>
-              <span className="text-base font-semibold text-center break-words">
-                {item.name}
-              </span>
-              <span className="text-xs text-gray-500">
-                {new Date(item.createdAt).toLocaleString()}
-              </span>
-              <div className="mt-3 flex gap-2">
-                <button
-                  onClick={() => renameItem(item.name)}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-full text-xs transition-all"
+                <div
+                  title={`Path: ${item.path}\nCreated: ${new Date(item.createdAt).toLocaleString()}`}
+                  onClick={() => item.type === "folder" && navigateToFolder(item.path)}
+                  className="cursor-pointer mb-3"
                 >
-                  Rename
-                </button>
-                <button
-                  onClick={() => deleteItem(item.name)}
-                  className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-full text-xs transition-all"
-                >
-                  Delete
-                </button>
+                  {item.type === "folder" ? (
+                    <Folder size={56} className="text-blue-500" />
+                  ) : (
+                    <File size={56} className="text-green-500" />
+                  )}
+                </div>
+                <div className="text-center">
+                  <span className="text-base font-semibold break-words">
+                    {item.name}
+                  </span>
+                  <p className="text-xs text-gray-500 mt-1 truncate max-w-full">
+                    {item.path}
+                  </p>
+                </div>
+                <span className="text-xs text-gray-500 mt-2">
+                  {new Date(item.createdAt).toLocaleString()}
+                </span>
+                <div className="mt-3 flex gap-2">
+                  <button
+                    onClick={() => renameItem(item.name)}
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-full text-xs transition-all"
+                  >
+                    Rename
+                  </button>
+                  <button
+                    onClick={() => deleteItem(item.name)}
+                    className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-full text-xs transition-all"
+                  >
+                    Delete
+                  </button>
+                </div>
               </div>
-            </div>
-          ))
+            ))
+          ) : (
+            <p className="text-center text-gray-400 italic mt-10 col-span-full">
+              {isSearching ? "Searching..." : "No files or folders found matching your search."}
+            </p>
+          )
         ) : (
-          <p className="text-center text-gray-400 italic mt-10">
-            No files or folders found in this directory.
-          </p>
+          filteredFiles.length > 0 ? (
+            filteredFiles.map((item) => (
+              <div
+                key={item.name}
+                className="bg-white p-6 min-h-[180px] rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300 flex flex-col items-center justify-between border border-gray-200"
+              >
+                <div
+                  title={`Created: ${new Date(item.createdAt).toLocaleString()}`}
+                  onClick={() => item.type === "folder" && navigateToFolder(item.name)}
+                  className="cursor-pointer mb-3"
+                >
+                  {item.type === "folder" ? (
+                    <Folder size={56} className="text-blue-500" />
+                  ) : (
+                    <File size={56} className="text-green-500" />
+                  )}
+                </div>
+                <span className="text-base font-semibold text-center break-words">
+                  {item.name}
+                </span>
+                <span className="text-xs text-gray-500">
+                  {new Date(item.createdAt).toLocaleString()}
+                </span>
+                <div className="mt-3 flex gap-2">
+                  <button
+                    onClick={() => renameItem(item.name)}
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-full text-xs transition-all"
+                  >
+                    Rename
+                  </button>
+                  <button
+                    onClick={() => deleteItem(item.name)}
+                    className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-full text-xs transition-all"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            ))
+          ) : (
+            <p className="text-center text-gray-400 italic mt-10">
+              No files or folders found in this directory.
+            </p>
+          )
         )}
       </div>
 
