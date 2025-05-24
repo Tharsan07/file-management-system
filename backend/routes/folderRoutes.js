@@ -16,7 +16,7 @@
   }
 
   // List files/folders
-  router.get("/list", (req, res) => {
+  router.get("/list", async (req, res) => {
     const requestedPath = req.query.path || "";
     folder_path = requestedPath;
     const fullPath = path.join(STORAGE_PATH, requestedPath);
@@ -26,25 +26,40 @@
     }
 
     try {
-      const items = fs.readdirSync(fullPath).map((name) => {
+      const items = await Promise.all(fs.readdirSync(fullPath).map(async (name) => {
         const fullItemPath = path.join(fullPath, name);
         const stats = fs.statSync(fullItemPath);
+        const isDirectory = stats.isDirectory();
+        
+        // Get metadata for files
+        let metadata = null;
+        if (!isDirectory) {
+          const relativePath = path.join(requestedPath, name);
+          metadata = await db.Metadata.findOne({ 
+            where: { filePath: relativePath }
+          });
+        }
 
         return {
           name,
-          type: stats.isDirectory() ? "folder" : "file",
-          createdAt: stats.birthtime, // Get file creation time
+          type: isDirectory ? "folder" : "file",
+          createdAt: stats.birthtime,
+          ...(metadata ? metadata.toJSON() : {}),
+          path: path.join(requestedPath, name)
         };
-      });
+      }));
 
-      // ✅ Sort by createdAt (newest first)
-      const sortedItems = items.sort(
-        (a, b) => new Date(a.createdAt) - new Date(b.createdAt)
-      );
-      
+      // Sort by type (folders first) and then by name
+      const sortedItems = items.sort((a, b) => {
+        if (a.type !== b.type) {
+          return a.type === 'folder' ? -1 : 1;
+        }
+        return a.name.localeCompare(b.name);
+      });
 
       res.json(sortedItems);
     } catch (error) {
+      console.error('Error reading directory:', error);
       res.status(500).json({
         message: "Error reading directory.",
         error: error.toString(),
@@ -191,49 +206,62 @@
     const results = [];
     try {
       const entries = await fs.promises.readdir(dirPath, { withFileTypes: true });
-
+  
       for (const entry of entries) {
         const fullPath = path.join(dirPath, entry.name);
-        const relativePath = path.relative(STORAGE_PATH, fullPath);
-        
+        const relativePath = path.relative(STORAGE_PATH, fullPath).replace(/\\/g, '/');
+  
         if (entry.isDirectory()) {
-          // Add folder to results if it matches the search criteria
-          if (entry.name.toLowerCase().includes(query.toLowerCase())) {
+          // For folders, check if name matches search query
+          const matchesQuery = !query || entry.name.toLowerCase().includes(query.toLowerCase());
+  
+          // For folders, check if the folder name matches any active filters
+          const matchesYear = !year || entry.name.includes(year);
+          const matchesCompanyCode = !companyCode || entry.name.includes(companyCode);
+          const matchesAssemblyCode = !assemblyCode || entry.name.includes(assemblyCode);
+  
+          // Add folder if it matches search and all active filters
+          if (matchesQuery && matchesYear && matchesCompanyCode && matchesAssemblyCode) {
             const stats = await fs.promises.stat(fullPath);
             results.push({
               name: entry.name,
               type: 'folder',
               path: relativePath,
-              fullPath: fullPath,
               createdAt: stats.birthtime
             });
           }
+  
           // Recursively search inside the folder
           const subResults = await searchDirectory(fullPath, query, year, companyCode, assemblyCode);
           results.push(...subResults);
         } else {
-          // For files, check metadata
-          const metadata = await db.Metadata.findOne({ 
-            where: { 
-              filePath: relativePath,
-              ...(year && { year }),
-              ...(companyCode && { companyCode }),
-              ...(assemblyCode && { assemblyCode })
+          // For files, first check metadata
+          const metadata = await db.Metadata.findOne({
+            where: {
+              filePath: relativePath
             }
           });
-
-          if (metadata) {
-            const matchesQuery = metadata.fileName.toLowerCase().includes(query.toLowerCase());
-            if (matchesQuery) {
-              const stats = await fs.promises.stat(fullPath);
-              results.push({
-                ...metadata.toJSON(),
-                type: 'file',
-                path: relativePath,
-                fullPath: fullPath,
-                createdAt: stats.birthtime
-              });
-            }
+  
+          // Check if file matches search query
+          const matchesQuery = !query || 
+            entry.name.toLowerCase().includes(query.toLowerCase()) ||
+            relativePath.toLowerCase().includes(query.toLowerCase());
+  
+          // Check if file matches all active filters
+          const matchesYear = !year || (metadata && metadata.year === year);
+          const matchesCompanyCode = !companyCode || (metadata && metadata.companyCode === companyCode);
+          const matchesAssemblyCode = !assemblyCode || (metadata && metadata.assemblyCode === assemblyCode);
+  
+          // Add file if it matches search and all active filters
+          if (matchesQuery && matchesYear && matchesCompanyCode && matchesAssemblyCode) {
+            const stats = await fs.promises.stat(fullPath);
+            results.push({
+              name: entry.name,
+              type: 'file',
+              path: relativePath,
+              createdAt: stats.birthtime,
+              ...(metadata ? metadata.toJSON() : {})
+            });
           }
         }
       }
@@ -242,17 +270,13 @@
     }
     return results;
   }
-
+  
   // Search files/folders in the database with filters
   router.get("/search", async (req, res) => {
     const { query, year, companyCode, assemblyCode } = req.query;
-    
-    if (!query) {
-      return res.status(400).json({ message: "Search query is required" });
-    }
-
+  
     try {
-      const results = await searchDirectory(STORAGE_PATH, query, year, companyCode, assemblyCode);
+      const results = await searchDirectory(STORAGE_PATH, query || '', year, companyCode, assemblyCode);
       // Sort results by type (folders first) and then by name
       const sortedResults = results.sort((a, b) => {
         if (a.type !== b.type) {
@@ -266,5 +290,6 @@
       res.status(500).json({ message: "Error searching files.", error: error.toString() });
     }
   });
+ 
 
   module.exports = router;

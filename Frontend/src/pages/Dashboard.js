@@ -1,14 +1,11 @@
 import React, { useState, useEffect } from "react";
-import {
-  Folder,
-  File,
-  ChevronLeft,
-  PlusCircle,
-  UploadCloud,
-} from "lucide-react";
+import Header from "../components/header";
 import RenameModal from "../components/RenameModal";
 import ModelComponent from "../components/ModelComponent";
-import Header from "../components/header";
+import SearchAndFilters from "../components/dashboard/SearchAndFilters.js";
+import FileGrid from "../components/dashboard/FileGrid.js";
+import Breadcrumb from "../components/dashboard/Breadcrumb.js";
+import ActionButtons from "../components/dashboard/ActionButtons.js";
 
 export default function Dashboard({ authToken, setPage }) {
   const [files, setFiles] = useState([]);
@@ -46,13 +43,14 @@ export default function Dashboard({ authToken, setPage }) {
     }
   }, [currentPath]);
 
-  // Remove the duplicate useEffect for search
+  // Handle search and filters together
   useEffect(() => {
     const timer = setTimeout(() => {
-      if (searchQuery.trim()) {
+      if (searchQuery.trim() || yearFilter || companyCodeFilter || assemblyCodeFilter) {
         handleSearch();
       } else {
         setSearchResults([]);
+        fetchFiles();
       }
     }, 300);
 
@@ -61,7 +59,7 @@ export default function Dashboard({ authToken, setPage }) {
 
   const logout = () => {
     localStorage.removeItem("authToken");
-    localStorage.removeItem("currentPath"); // optional: clear path on logout
+    localStorage.removeItem("currentPath");
     setPage("login");
   };
 
@@ -162,11 +160,6 @@ export default function Dashboard({ authToken, setPage }) {
   };
 
   const handleSearch = async () => {
-    if (!searchQuery.trim()) {
-      setSearchResults([]);
-      return;
-    }
-
     setIsSearching(true);
     try {
       const response = await fetch(
@@ -187,6 +180,21 @@ export default function Dashboard({ authToken, setPage }) {
       setIsSearching(false);
     }
   };
+  
+  // Handle search and filters together
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (searchQuery.trim() || yearFilter || companyCodeFilter || assemblyCodeFilter) {
+        handleSearch();
+      } else {
+        setSearchResults([]);
+        fetchFiles();
+      }
+    }, 300);
+  
+    return () => clearTimeout(timer);
+  }, [searchQuery, yearFilter, companyCodeFilter, assemblyCodeFilter]);
+  
 
   const uploadFile = async (event) => {
     const file = event.target.files[0];
@@ -211,12 +219,10 @@ export default function Dashboard({ authToken, setPage }) {
 
   const navigateToFolder = (folderPath) => {
     if (searchQuery) {
-      // If we're in search mode, use the full path from search results
       setCurrentPath(folderPath);
-      setSearchQuery(""); // Clear search when navigating
-      setSearchResults([]); // Clear search results
+      setSearchQuery("");
+      setSearchResults([]);
     } else {
-      // If we're in normal mode, append the folder name to current path
       setCurrentPath(currentPath ? `${currentPath}/${folderPath}` : folderPath);
     }
   };
@@ -237,16 +243,6 @@ export default function Dashboard({ authToken, setPage }) {
     const newPath = pathArray.slice(0, index + 1).join("/");
     setCurrentPath(newPath);
   };
-
-  const filteredFiles = files
-    .filter((item) => {
-      const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesYear = !yearFilter || item.name.includes(yearFilter);
-      const matchesCompanyCode = !companyCodeFilter || item.name.includes(companyCodeFilter);
-      const matchesAssemblyCode = !assemblyCodeFilter || item.name.includes(assemblyCodeFilter);
-      return matchesSearch && matchesYear && matchesCompanyCode && matchesAssemblyCode;
-    })
-    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: 10 }, (_, i) => currentYear - i);
@@ -279,206 +275,52 @@ export default function Dashboard({ authToken, setPage }) {
 
       {/* Filters and Actions */}
       <div className="p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 flex-wrap">
-        <div className="flex-1 flex items-center gap-4">
-          <div className="relative w-full md:w-96">
-            <input
-              type="text"
-              placeholder="Search files & folders"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full p-3 border border-gray-300 rounded-xl shadow-inner focus:ring-2 focus:ring-blue-300 transition-all"
-            />
-            {isSearching && (
-              <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-500"></div>
-              </div>
-            )}
-          </div>
-          <div className="flex gap-2">
-            <select
-              value={yearFilter}
-              onChange={(e) => setYearFilter(e.target.value)}
-              className="p-3 border border-gray-300 rounded-xl shadow-inner focus:ring-2 focus:ring-blue-300 transition-all"
-            >
-              <option value="">Filter by Year</option>
-              {years.map((yearOption) => (
-                <option key={yearOption} value={yearOption}>
-                  {yearOption}
-                </option>
-              ))}
-            </select>
-            <select
-              value={companyCodeFilter}
-              onChange={(e) => setCompanyCodeFilter(e.target.value)}
-              className="p-3 border border-gray-300 rounded-xl shadow-inner focus:ring-2 focus:ring-blue-300 transition-all"
-            >
-              <option value="">Filter by Company Code</option>
-              {companies.map((company) => (
-                <option key={company.code} value={company.code}>
-                  {company.code} - {company.name}
-                </option>
-              ))}
-            </select>
-            <select
-              value={assemblyCodeFilter}
-              onChange={(e) => setAssemblyCodeFilter(e.target.value)}
-              className="p-3 border border-gray-300 rounded-xl shadow-inner focus:ring-2 focus:ring-blue-300 transition-all"
-            >
-              <option value="">Filter by Assembly Code</option>
-              {assemblyCodes.map((assembly) => (
-                <option key={assembly.code} value={assembly.code}>
-                  {assembly.code} - {assembly.name}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        {/* Action Buttons */}
-        <div className="flex flex-wrap gap-4">
-          <button
-            onClick={() => setIsModalOpen(true)}
-            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl shadow-md transition-all"
-          >
-            <PlusCircle size={16} /> Add Folder
-          </button>
-          <label
-            htmlFor="file-upload"
-            className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-xl shadow-md cursor-pointer transition-all"
-          >
-            <UploadCloud size={16} /> Upload File
-          </label>
-          <input id="file-upload" type="file" onChange={uploadFile} className="hidden" />
-        </div>
+        <SearchAndFilters
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+          yearFilter={yearFilter}
+          setYearFilter={setYearFilter}
+          companyCodeFilter={companyCodeFilter}
+          setCompanyCodeFilter={setCompanyCodeFilter}
+          assemblyCodeFilter={assemblyCodeFilter}
+          setAssemblyCodeFilter={setAssemblyCodeFilter}
+          companies={companies}
+          assemblyCodes={assemblyCodes}
+          isSearching={isSearching}
+          years={years}
+        />
+        <ActionButtons setIsModalOpen={setIsModalOpen} uploadFile={uploadFile} />
       </div>
 
-      {/* Path Breadcrumb - MOVED HERE, ABOVE FOLDERS */}
+      {/* Path Breadcrumb */}
       <div className="px-4 mb-4">
-        {currentPath && (
-          <div className="flex items-center gap-2 mb-2 p-3 bg-white rounded-xl shadow-sm">
-            <button onClick={goBack} className="text-gray-600 hover:text-gray-800">
-              <ChevronLeft size={20} />
-            </button>
-            <div className="flex flex-wrap items-center gap-1 text-sm text-gray-600">
-              <span 
-                onClick={() => setCurrentPath("")}
-                className="cursor-pointer text-blue-600 hover:underline"
-              >
-                Home
-              </span>
-              {currentPath.split("/").map((segment, index) => (
-                <div key={index} className="flex items-center gap-1">
-                  <span className="text-gray-400">/</span>
-                  <span
-                    onClick={() => navigateToPathSegment(index)}
-                    className="cursor-pointer text-blue-600 hover:underline"
-                  >
-                    {segment}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+        <Breadcrumb
+          currentPath={currentPath}
+          goBack={goBack}
+          setCurrentPath={setCurrentPath}
+          navigateToPathSegment={navigateToPathSegment}
+        />
       </div>
 
       {/* Search Results or Current Directory */}
       <div className="px-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {searchQuery ? (
-          searchResults.length > 0 ? (
-            searchResults.map((item) => (
-              <div
-                key={item.path}
-                className="bg-white p-6 min-h-[180px] rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300 flex flex-col items-center justify-between border border-gray-200"
-              >
-                <div
-                  title={`Path: ${item.path}\nCreated: ${new Date(item.createdAt).toLocaleString()}`}
-                  onClick={() => item.type === "folder" && navigateToFolder(item.path)}
-                  className="cursor-pointer mb-3"
-                >
-                  {item.type === "folder" ? (
-                    <Folder size={56} className="text-blue-500" />
-                  ) : (
-                    <File size={56} className="text-green-500" />
-                  )}
-                </div>
-                <div className="text-center">
-                  <span className="text-base font-semibold break-words">
-                    {item.name}
-                  </span>
-                  <p className="text-xs text-gray-500 mt-1 truncate max-w-full">
-                    {item.path}
-                  </p>
-                </div>
-                <span className="text-xs text-gray-500 mt-2">
-                  {new Date(item.createdAt).toLocaleString()}
-                </span>
-                <div className="mt-3 flex gap-2">
-                  <button
-                    onClick={() => renameItem(item.name)}
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-full text-xs transition-all"
-                  >
-                    Rename
-                  </button>
-                  <button
-                    onClick={() => deleteItem(item.name)}
-                    className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-full text-xs transition-all"
-                  >
-                    Delete
-                  </button>
-                </div>
-              </div>
-            ))
-          ) : (
-            <p className="text-center text-gray-400 italic mt-10 col-span-full">
-              {isSearching ? "Searching..." : "No files or folders found matching your search."}
-            </p>
-          )
+        {(searchQuery.trim() || yearFilter || companyCodeFilter || assemblyCodeFilter) ? (
+          <FileGrid
+            items={searchResults}
+            isSearching={isSearching}
+            navigateToFolder={navigateToFolder}
+            renameItem={renameItem}
+            deleteItem={deleteItem}
+            isSearchResults={true}
+          />
         ) : (
-          filteredFiles.length > 0 ? (
-            filteredFiles.map((item) => (
-              <div
-                key={item.name}
-                className="bg-white p-6 min-h-[180px] rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300 flex flex-col items-center justify-between border border-gray-200"
-              >
-                <div
-                  title={`Created: ${new Date(item.createdAt).toLocaleString()}`}
-                  onClick={() => item.type === "folder" && navigateToFolder(item.name)}
-                  className="cursor-pointer mb-3"
-                >
-                  {item.type === "folder" ? (
-                    <Folder size={56} className="text-blue-500" />
-                  ) : (
-                    <File size={56} className="text-green-500" />
-                  )}
-                </div>
-                <span className="text-base font-semibold text-center break-words">
-                  {item.name}
-                </span>
-                <span className="text-xs text-gray-500">
-                  {new Date(item.createdAt).toLocaleString()}
-                </span>
-                <div className="mt-3 flex gap-2">
-                  <button
-                    onClick={() => renameItem(item.name)}
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-full text-xs transition-all"
-                  >
-                    Rename
-                  </button>
-                  <button
-                    onClick={() => deleteItem(item.name)}
-                    className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-full text-xs transition-all"
-                  >
-                    Delete
-                  </button>
-                </div>
-              </div>
-            ))
-          ) : (
-            <p className="text-center text-gray-400 italic mt-10">
-              No files or folders found in this directory.
-            </p>
-          )
+          <FileGrid
+            items={files}
+            isSearching={isSearching}
+            navigateToFolder={navigateToFolder}
+            renameItem={renameItem}
+            deleteItem={deleteItem}
+          />
         )}
       </div>
 
