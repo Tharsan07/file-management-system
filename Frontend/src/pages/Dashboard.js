@@ -218,14 +218,18 @@ export default function Dashboard({ authToken, setPage }) {
   };
 
   const navigateToFolder = (folderPath) => {
-    if (searchQuery) {
-      setCurrentPath(folderPath);
-      setSearchQuery("");
-      setSearchResults([]);
-    } else {
-      setCurrentPath(currentPath ? `${currentPath}/${folderPath}` : folderPath);
-    }
-  };
+  if (searchQuery.trim() || yearFilter || companyCodeFilter || assemblyCodeFilter) {
+    // Clear filters/search when navigating inside folders
+    setSearchQuery("");
+    setYearFilter("");
+    setCompanyCodeFilter("");
+    setAssemblyCodeFilter("");
+    setSearchResults([]);
+    setCurrentPath(currentPath ? `${currentPath}/${folderPath}` : folderPath);
+  } else {
+    setCurrentPath(currentPath ? `${currentPath}/${folderPath}` : folderPath);
+  }
+};
 
   const goBack = () => {
     if (!currentPath) return;

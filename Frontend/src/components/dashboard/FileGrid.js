@@ -9,6 +9,33 @@ const FileGrid = ({
   deleteItem,
   isSearchResults = false
 }) => {
+  const handleFileClick = async (item) => {
+    if (item.type === "folder") {
+      navigateToFolder(isSearchResults ? item.path : item.name);
+    } else {
+      try {
+        const response = await fetch('http://localhost:5000/api/folder/open-with', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            filePath: item.path,
+            appName: 'Default Application'
+          }),
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.message || 'Failed to open file');
+        }
+      } catch (error) {
+        console.error('Error opening file:', error);
+        alert('Failed to open file: ' + error.message);
+      }
+    }
+  };
+
   if (items.length === 0) {
     return (
       <p className="text-center text-gray-400 italic mt-10 col-span-full">
@@ -26,7 +53,7 @@ const FileGrid = ({
         >
           <div
             title={`${isSearchResults ? `Path: ${item.path}\n` : ''}Created: ${new Date(item.createdAt).toLocaleString()}`}
-            onClick={() => item.type === "folder" && navigateToFolder(isSearchResults ? item.path : item.name)}
+            onClick={() => handleFileClick(item)}
             className="cursor-pointer mb-3"
           >
             {item.type === "folder" ? (
@@ -48,7 +75,7 @@ const FileGrid = ({
           <span className="text-xs text-gray-500 mt-2">
             {new Date(item.createdAt).toLocaleString()}
           </span>
-          <div className="mt-3 flex gap-2">
+          <div className="flex gap-2 mt-3">
             <button
               onClick={() => renameItem(item.name)}
               className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-full text-xs transition-all"
